@@ -39,10 +39,10 @@ const chargeRightEl = document.getElementById('chargeRight');
 const chargeCaseEl = document.getElementById('chargeCase');
 
 const ancSliderEl = document.getElementById('ancSlider');
-const ancButtons = document.querySelectorAll('.anc-btn');
+const ancButtons = document.querySelectorAll('.segmented-option, .anc-btn');
 const ancCaptionEl = document.getElementById('ancCaption');
 
-const eqPills = document.querySelectorAll('.eq-pill');
+const eqPills = document.querySelectorAll('.eq-chip, .eq-pill');
 const chkGameMode = document.getElementById('chkGameMode');
 
 const fwInfoEl = document.getElementById('fwInfo');
@@ -52,8 +52,8 @@ const btnQuit = document.getElementById('btnQuit');
 
 // Captions for ANC states
 const ANC_CAPTIONS = {
-  'cancellation': '46dB Hybrid Noise Cancellation active',
-  'off': 'Noise control off (Standard passive isolation)',
+  'cancellation': '46 dB Hybrid Active Noise Cancellation',
+  'off': 'Noise control off (Passive isolation)',
   'transparency': 'Ambient sound pass-through active'
 };
 
@@ -87,11 +87,11 @@ function updateUI(state) {
 
   // Connection Status
   if (state.connected) {
-    statusDotEl.className = 'status-dot';
-    statusTextEl.textContent = 'Connected via BLE';
+    statusDotEl.className = 'status-indicator';
+    statusTextEl.textContent = 'Connected';
     btnToggleConnect.textContent = 'Simulate Disconnect';
   } else {
-    statusDotEl.className = 'status-dot disconnected';
+    statusDotEl.className = 'status-indicator disconnected';
     statusTextEl.textContent = 'Disconnected';
     btnToggleConnect.textContent = 'Reconnect';
   }

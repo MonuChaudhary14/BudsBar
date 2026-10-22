@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Production builds & packages
+dist/
+*.dmg
+*.blockmap
+
+# Logs
+*.log
+npm-debug.log*
+
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Temporary files
+*.tmp
+assets/icon_1024.png

@@ -1,0 +1,57 @@
+{
+  "name": "budsbar",
+  "version": "1.0.0",
+  "description": "Cross-platform Desktop Menu-Bar & Tray Controller for realme Buds T310",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.monuchaudhary.budsbar",
+    "productName": "BudsBar",
+    "mac": {
+      "icon": "assets/icon.icns",
+      "target": [
+        "dir",
+        "dmg"
+      ],
+      "category": "public.app-category.utilities",
+      "darkModeSupport": true,
+      "identity": null
+    },
+    "files": [
+      "**/*",
+      "!buds-ctl.swift",
+      "!generate_icon.swift",
+      "!assets/icon_1024.png"
+    ],
+    "extraResources": [
+      {
+        "from": "buds-ctl",
+        "to": "buds-ctl"
+      }
+    ],
+    "asarUnpack": [
+      "buds-ctl"
+    ]
+  },
+  "keywords": [
+    "earbuds",
+    "realme",
+    "anc",
+    "menubar",
+    "tray",
+    "bluetooth",
+    "airoha",
+    "t310"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^26.15.3"
+  }
+}

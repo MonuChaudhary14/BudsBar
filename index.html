@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BudsBar Controller</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="window-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="device-meta">
+        <div class="device-icon-wrap">
+          <svg class="device-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="device-name" id="deviceName">realme Buds T310</h1>
+          <div class="connection-status">
+            <span class="status-dot connected" id="statusDot"></span>
+            <span class="status-text" id="statusText">Connected via BLE</span>
+          </div>
+        </div>
+      </div>
+      <button class="icon-btn" id="btnRefresh" title="Refresh state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Battery Section -->
+    <section class="battery-section">
+      <div class="battery-card" id="cardLeft">
+        <div class="battery-label">
+          <span>Left</span>
+          <span class="charging-icon hidden" id="chargeLeft">⚡</span>
+        </div>
+        <div class="battery-visual">
+          <svg class="battery-ring" viewBox="0 0 36 36">
+            <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            <path class="ring-fill" id="ringLeft" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          </svg>
+          <span class="battery-value" id="valLeft">85%</span>
+        </div>
+      </div>
+
+      <div class="battery-card" id="cardRight">
+        <div class="battery-label">
+          <span>Right</span>
+          <span class="charging-icon hidden" id="chargeRight">⚡</span>
+        </div>
+        <div class="battery-visual">
+          <svg class="battery-ring" viewBox="0 0 36 36">
+            <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            <path class="ring-fill" id="ringRight" stroke-dasharray="80, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          </svg>
+          <span class="battery-value" id="valRight">80%</span>
+        </div>
+      </div>
+
+      <div class="battery-card" id="cardCase">
+        <div class="battery-label">
+          <span>Case</span>
+          <span class="charging-icon hidden" id="chargeCase">⚡</span>
+        </div>
+        <div class="battery-visual">
+          <svg class="battery-ring" viewBox="0 0 36 36">
+            <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            <path class="ring-fill case-color" id="ringCase" stroke-dasharray="95, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          </svg>
+          <span class="battery-value" id="valCase">95%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Noise Control (ANC) -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Noise Control (ANC)</span>
+        <span class="hotkey-badge" id="ancHotkey">⌘⇧N</span>
+      </div>
+
+      <div class="anc-segmented-control" id="ancSegmented">
+        <div class="anc-slider" id="ancSlider"></div>
+        <button class="anc-btn active" data-mode="cancellation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+          <span>Cancel</span>
+        </button>
+        <button class="anc-btn" data-mode="off">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="12" y1="3" x2="12" y2="7"/>
+          </svg>
+          <span>Off</span>
+        </button>
+        <button class="anc-btn" data-mode="transparency">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12h2M20 12h2M6.34 6.34l1.42 1.42M16.24 16.24l1.42 1.42M6.34 17.66l1.42-1.42M16.24 7.76l1.42-1.42M12 2v2M12 20v2"/>
+            <circle cx="12" cy="12" r="4"/>
+          </svg>
+          <span>Ambient</span>
+        </button>
+      </div>
+      <div class="anc-caption" id="ancCaption">46dB Hybrid Noise Cancellation active</div>
+    </section>
+
+    <!-- Sound & Performance -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Sound Profile & EQ</span>
+      </div>
+
+      <div class="eq-grid" id="eqGrid">
+        <button class="eq-pill active" data-eq="bass_boost">
+          <span class="eq-pill-dot"></span>
+          <span>Bass Boost+</span>
+        </button>
+        <button class="eq-pill" data-eq="balanced">
+          <span class="eq-pill-dot"></span>
+          <span>Balanced</span>
+        </button>
+        <button class="eq-pill" data-eq="clear_vocals">
+          <span class="eq-pill-dot"></span>
+          <span>Clear Vocals</span>
+        </button>
+        <button class="eq-pill" data-eq="bright">
+          <span class="eq-pill-dot"></span>
+          <span>Nature Bright</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Game Mode Row -->
+    <section class="section">
+      <div class="game-mode-card">
+        <div class="game-mode-info">
+          <div class="game-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/>
+            </svg>
+          </div>
+          <div>
+            <div class="game-mode-title">Game Mode</div>
+            <div class="game-mode-sub">Ultra-low 45ms latency</div>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="chkGameMode">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Footer Diagnostics -->
+    <footer class="footer">
+      <div class="footer-meta">
+        <span id="fwInfo">FW: 1.1.0.89</span>
+        <span>•</span>
+        <span id="rssiInfo">-58 dBm</span>
+      </div>
+      <div class="footer-actions">
+        <button class="footer-link" id="btnToggleConnect">Simulate Disconnect</button>
+        <button class="footer-link danger" id="btnQuit">Quit</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

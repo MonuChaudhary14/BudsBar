@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, ipcMain, globalShortcut, nativeImage, screen } from 'electron';
+import { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, nativeImage, screen } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { EarbudsService } from './ble-service.js';
@@ -146,6 +146,26 @@ app.whenReady().then(() => {
   tray = new Tray(createTrayIcon());
   tray.setToolTip('BudsBar - realme Buds T310');
   tray.on('click', () => toggleWindow());
+
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'realme Buds T310', enabled: false },
+    { type: 'separator' },
+    { label: 'Show BudsBar', click: () => toggleWindow() },
+    {
+      label: 'Noise Control',
+      submenu: [
+        { label: 'Noise Cancellation', click: () => earbudsService.setAncMode('cancellation') },
+        { label: 'Off', click: () => earbudsService.setAncMode('off') },
+        { label: 'Ambient / Transparency', click: () => earbudsService.setAncMode('transparency') }
+      ]
+    },
+    { type: 'separator' },
+    { label: 'Quit BudsBar', click: () => app.quit() }
+  ]);
+
+  tray.on('right-click', () => {
+    tray.popUpContextMenu(contextMenu);
+  });
 
   registerHotkeys();
   setupIpc();

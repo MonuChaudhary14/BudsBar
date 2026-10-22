@@ -140,6 +140,12 @@ body {
   color: var(--text-secondary);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .action-btn {
   background: transparent;
   border: none;
@@ -156,6 +162,11 @@ body {
 .action-btn:hover {
   background: var(--card-hover);
   color: var(--text-primary);
+}
+
+.action-btn.quit-action-btn:hover {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--accent-red);
 }
 
 .action-btn:active {
@@ -562,13 +573,38 @@ input:checked + .switch-track:before {
   font-size: 10.5px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color var(--anim-fast);
+  transition: all var(--anim-fast);
 }
 
 .footer-btn:hover {
   color: var(--text-primary);
 }
 
-.footer-btn.danger:hover {
+.footer-btn.danger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 4px 9px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.footer-btn.danger-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.footer-btn.danger-btn:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.35);
   color: var(--accent-red);
+}
+
+.footer-btn.danger-btn:active {
+  transform: scale(0.96);
 }

@@ -24,12 +24,20 @@
           </div>
         </div>
       </div>
-      <button class="action-btn" id="btnRefresh" title="Refresh Status" aria-label="Refresh">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="23 4 23 10 17 10"></polyline>
-          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-        </svg>
-      </button>
+      <div class="header-actions">
+        <button class="action-btn" id="btnRefresh" title="Refresh Status" aria-label="Refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+        <button class="action-btn quit-action-btn" id="btnHeaderQuit" title="Quit BudsBar (⌘Q)" aria-label="Quit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
+      </div>
     </header>
 
     <!-- Battery Section -->
@@ -179,8 +187,13 @@
         <span id="rssiInfo">-52 dBm</span>
       </div>
       <div class="footer-ctrls">
-        <button class="footer-btn" id="btnToggleConnect">Simulate Disconnect</button>
-        <button class="footer-btn danger" id="btnQuit">Quit</button>
+        <button class="footer-btn danger-btn" id="btnQuit" title="Quit BudsBar (⌘Q)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+          <span>Quit BudsBar</span>
+        </button>
       </div>
     </footer>
   </div>

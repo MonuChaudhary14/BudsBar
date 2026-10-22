@@ -47,7 +47,7 @@ const chkGameMode = document.getElementById('chkGameMode');
 
 const fwInfoEl = document.getElementById('fwInfo');
 const rssiInfoEl = document.getElementById('rssiInfo');
-const btnToggleConnect = document.getElementById('btnToggleConnect');
+const btnHeaderQuit = document.getElementById('btnHeaderQuit');
 const btnQuit = document.getElementById('btnQuit');
 
 // Captions for ANC states
@@ -219,25 +219,26 @@ btnRefresh.addEventListener('click', async () => {
   }, 400);
 });
 
-btnToggleConnect.addEventListener('click', async () => {
-  const newConnected = !currentState.connected;
-  updateUI({ connected: newConnected });
-
-  if (window.budsAPI && typeof window.budsAPI.toggleConnection === 'function') {
-    try {
-      const state = await window.budsAPI.toggleConnection();
-      updateUI(state);
-    } catch (err) {
-      console.error('Failed to toggle connection:', err);
-    }
-  }
-});
-
-btnQuit.addEventListener('click', () => {
+function handleQuit() {
+  console.log('[BudsBar UI] Quitting app...');
   if (window.budsAPI && typeof window.budsAPI.quitApp === 'function') {
     window.budsAPI.quitApp();
   } else {
     window.close();
+  }
+}
+
+if (btnHeaderQuit) {
+  btnHeaderQuit.addEventListener('click', handleQuit);
+}
+
+if (btnQuit) {
+  btnQuit.addEventListener('click', handleQuit);
+}
+
+window.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'q') {
+    handleQuit();
   }
 });
 

@@ -7,24 +7,61 @@ Built using **Electron**, **Vanilla HTML5/CSS3/JavaScript**, and reverse-enginee
 
 ---
 
-## ✨ Features
+## 🍺 Installation via Homebrew (Recommended)
 
-- 🔋 **Live Triple Battery Monitoring**: Real-time visual battery gauges for Left Earbud, Right Earbud, and Charging Case with charging indicators.
-- 🔇 **Active Noise Cancellation (ANC)**: One-click 3-state switch between **Noise Cancellation** (46dB), **Off** (passive isolation), and **Ambient/Transparency** mode.
-- ⌨️ **Global OS Hotkeys**:
-  - `Cmd + Shift + N` (Mac) / `Ctrl + Shift + N` (Win/Linux) to cycle ANC instantly from any app or full-screen game.
-  - `Cmd + Shift + G` (Mac) / `Ctrl + Shift + G` (Win/Linux) to toggle Low-Latency Game Mode.
-- 🎮 **Game Mode (45ms)**: Toggle ultra-low latency audio streaming.
-- 🎵 **Hardware EQ Presets**: Switch between *Bass Boost+*, *Balanced*, *Clear Vocals*, and *Nature Bright*.
-- 💎 **Premium Glassmorphism Design**: Translucent dark frosted glass with fluid 60fps animations.
+You can install **BudsBar** with a single command via Homebrew:
+
+```bash
+brew install --cask MonuChaudhary14/tap/budsbar
+```
+
+Or tap first:
+
+```bash
+brew tap MonuChaudhary14/tap
+brew install --cask budsbar
+```
 
 ---
 
-## 🚀 Running the App
+## 📦 Direct Download
+
+Download the latest Apple Silicon DMG from [Releases](https://github.com/MonuChaudhary14/BudsBar/releases):
+
+- **[BudsBar-1.0.0-arm64.dmg](https://github.com/MonuChaudhary14/BudsBar/releases/download/v1.0.0/BudsBar-1.0.0-arm64.dmg)**
+
+---
+
+## ✨ Features
+
+- 🔋 **Live Triple Battery Monitoring**: Real-time visual battery gauges for Left Earbud, Right Earbud, and Charging Case with charging indicators.
+- 🔇 **Active Noise Cancellation (ANC)**: Apple-style sliding pill selector between **Noise Cancellation** (46dB), **Off** (passive isolation), and **Transparent** mode.
+- ⌨️ **Global OS Hotkeys**:
+  - `Cmd + Shift + N` to cycle ANC instantly from any app or full-screen game.
+  - `Cmd + Shift + G` to toggle Low-Latency Game Mode.
+  - `Cmd + Q` to cleanly quit the app.
+- 🎮 **Game Mode (45ms)**: Ultra-low latency dual-channel audio sync.
+- 🎵 **Hardware EQ Presets**: Switch between *Bass Boost+*, *Balanced*, *Clear Vocals*, and *Nature Bright* with live acoustic waveforms.
+- 💎 **macOS Control Center Glassmorphism**: Translucent obsidian frosted acrylic with dynamic ambient aura.
+
+---
+
+## 🛠️ Local Development
 
 ```bash
-cd /Users/monuchaudhary/Desktop/reverse/budsbar
-npm start
+git clone https://github.com/MonuChaudhary14/BudsBar.git
+cd BudsBar
+npm install
+npm run dev
 ```
 
-The app will appear in your **macOS Menu Bar** (or Windows Taskbar Tray / Linux AppIndicator) as a small headphone icon. Click the icon to open the popover control center!
+Build the native `.app` and `.dmg`:
+```bash
+npm run pack   # builds dist/mac-arm64/BudsBar.app
+npm run dist   # builds dist/BudsBar-1.0.0-arm64.dmg
+```
+
+---
+
+## 📄 License
+MIT © Monu Chaudhary

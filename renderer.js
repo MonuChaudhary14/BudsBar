@@ -1,13 +1,13 @@
-// Fallback / Initial State
+// Initial State
 let currentState = {
   connected: true,
   ancMode: localStorage.getItem('budsbar_anc') || 'off', // 'cancellation' | 'off' | 'transparency'
   gameMode: false,
-  eqPreset: localStorage.getItem('budsbar_eq') || 'bass_boost',  // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
+  eqPreset: localStorage.getItem('budsbar_eq') || 'bass_boost', // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
   battery: {
-    left: 85,
-    right: 80,
-    case: 95,
+    left: 100,
+    right: 100,
+    case: 100,
     chargingLeft: false,
     chargingRight: false,
     chargingCase: false
@@ -17,11 +17,10 @@ let currentState = {
     model: 'RMA2302',
     firmwareVersion: '1.1.0.89'
   },
-  rssi: -58
+  rssi: -52
 };
 
 // DOM Elements
-const appShell = document.getElementById('appShell');
 const deviceNameEl = document.getElementById('deviceName');
 const statusDotEl = document.getElementById('statusDot');
 const statusTextEl = document.getElementById('statusText');
@@ -31,73 +30,39 @@ const valLeftEl = document.getElementById('valLeft');
 const valRightEl = document.getElementById('valRight');
 const valCaseEl = document.getElementById('valCase');
 
-const ringLeftEl = document.getElementById('ringLeft');
-const ringRightEl = document.getElementById('ringRight');
-const ringCaseEl = document.getElementById('ringCase');
+const barLeftEl = document.getElementById('barLeft');
+const barRightEl = document.getElementById('barRight');
+const barCaseEl = document.getElementById('barCase');
 
-const chargeLeftEl = document.getElementById('chargeLeft');
-const chargeRightEl = document.getElementById('chargeRight');
-const chargeCaseEl = document.getElementById('chargeCase');
-
-const ancSliderEl = document.getElementById('ancSlider');
-const ancButtons = document.querySelectorAll('.segmented-option, .anc-btn');
+const ancButtons = document.querySelectorAll('.segment-btn, .segmented-option');
 const ancCaptionEl = document.getElementById('ancCaption');
-const ancDbBadge = document.getElementById('ancDbBadge');
 
-const eqPills = document.querySelectorAll('.eq-chip, .eq-pill');
+const eqButtons = document.querySelectorAll('.eq-btn, .eq-chip');
 const chkGameMode = document.getElementById('chkGameMode');
 
 const fwInfoEl = document.getElementById('fwInfo');
 const rssiInfoEl = document.getElementById('rssiInfo');
-const btnHeaderQuit = document.getElementById('btnHeaderQuit');
-const btnQuit = document.getElementById('btnQuit');
 
 // Captions for ANC states
 const ANC_CAPTIONS = {
-  'cancellation': '46 dB Active Noise Cancellation',
-  'transparency': 'Transparent mode (Ambient pass-through)',
-  'off': 'Normal mode (Noise control off)'
+  'cancellation': 'Active Noise Cancellation',
+  'off': 'Normal mode (Noise control off)',
+  'transparency': 'Transparent mode (Ambient pass-through)'
 };
 
-const ANC_DB_TEXT = {
-  'cancellation': '46 dB',
-  'transparency': 'LIVE',
-  'off': 'NORM'
-};
-
-// Update Battery Ring Stroke
-function setRingLevel(ringEl, pct, isCase = false) {
-  if (!ringEl) return;
+// Update Battery Bar Fill
+function updateBatteryBar(barEl, pct) {
+  if (!barEl) return;
   const clamped = Math.max(0, Math.min(100, pct));
-  ringEl.setAttribute('stroke-dasharray', `${clamped}, 100`);
+  barEl.style.width = `${clamped}%`;
 
-  if (!isCase) {
-    if (clamped <= 20) {
-      ringEl.style.stroke = 'var(--accent-red)';
-      ringEl.style.filter = 'drop-shadow(0 0 3px var(--accent-red-glow))';
-    } else if (clamped <= 40) {
-      ringEl.style.stroke = 'var(--accent-amber)';
-      ringEl.style.filter = 'drop-shadow(0 0 3px var(--accent-amber-glow))';
-    } else {
-      ringEl.style.stroke = 'var(--accent-cyan)';
-      ringEl.style.filter = 'drop-shadow(0 0 3px var(--accent-cyan-glow))';
-    }
+  if (clamped <= 20) {
+    barEl.style.backgroundColor = 'var(--color-red)';
+  } else if (clamped <= 35) {
+    barEl.style.backgroundColor = 'var(--color-amber)';
+  } else {
+    barEl.style.backgroundColor = 'var(--color-green)';
   }
-}
-
-// Update RSSI 4-bar indicator
-function updateSignalBars(rssi) {
-  const bars = document.querySelectorAll('.signal-indicator .bar');
-  if (!bars.length) return;
-  
-  let activeCount = 4;
-  if (rssi < -82) activeCount = 1;
-  else if (rssi < -72) activeCount = 2;
-  else if (rssi < -62) activeCount = 3;
-
-  bars.forEach((bar, idx) => {
-    bar.classList.toggle('active', idx < activeCount);
-  });
 }
 
 // Render Complete State to DOM
@@ -114,7 +79,7 @@ function updateUI(state) {
   // Connection Status
   if (state.connected !== undefined) {
     if (statusDotEl) {
-      statusDotEl.className = state.connected ? 'status-indicator' : 'status-indicator disconnected';
+      statusDotEl.className = state.connected ? 'status-dot' : 'status-dot disconnected';
     }
     if (statusTextEl) {
       statusTextEl.textContent = state.connected ? 'Connected' : 'Disconnected';
@@ -127,35 +92,21 @@ function updateUI(state) {
     if (valRightEl) valRightEl.textContent = `${state.battery.right}%`;
     if (valCaseEl) valCaseEl.textContent = `${state.battery.case}%`;
 
-    setRingLevel(ringLeftEl, state.battery.left, false);
-    setRingLevel(ringRightEl, state.battery.right, false);
-    setRingLevel(ringCaseEl, state.battery.case, true);
-
-    if (chargeLeftEl) chargeLeftEl.classList.toggle('hidden', !state.battery.chargingLeft);
-    if (chargeRightEl) chargeRightEl.classList.toggle('hidden', !state.battery.chargingRight);
-    if (chargeCaseEl) chargeCaseEl.classList.toggle('hidden', !state.battery.chargingCase);
+    updateBatteryBar(barLeftEl, state.battery.left);
+    updateBatteryBar(barRightEl, state.battery.right);
+    updateBatteryBar(barCaseEl, state.battery.case);
   }
 
-  // ANC Slider, Badges & Ambient Theme
+  // ANC Mode
   if (state.ancMode) {
     try { localStorage.setItem('budsbar_anc', state.ancMode); } catch (e) {}
-    const ancModes = ['cancellation', 'off', 'transparency'];
-    const activeIndex = ancModes.indexOf(state.ancMode);
-    
-    if (activeIndex !== -1 && ancSliderEl) {
-      ancSliderEl.style.transform = `translateX(${activeIndex * 100}%)`;
-    }
 
     ancButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-mode') === state.ancMode);
     });
 
-    if (ancCaptionEl) ancCaptionEl.textContent = ANC_CAPTIONS[state.ancMode] || '';
-    if (ancDbBadge) ancDbBadge.textContent = ANC_DB_TEXT[state.ancMode] || '46 dB';
-
-    // Reactively update ambient backdrop lighting
-    if (appShell) {
-      appShell.setAttribute('data-anc', state.ancMode);
+    if (ancCaptionEl) {
+      ancCaptionEl.textContent = ANC_CAPTIONS[state.ancMode] || '';
     }
   }
 
@@ -164,49 +115,48 @@ function updateUI(state) {
     chkGameMode.checked = Boolean(state.gameMode);
   }
 
-  // EQ Presets
+  // EQ Preset
   if (state.eqPreset) {
-    eqPills.forEach(pill => {
-      const isCurrent = pill.getAttribute('data-eq') === state.eqPreset;
-      pill.classList.toggle('active', isCurrent);
+    try { localStorage.setItem('budsbar_eq', state.eqPreset); } catch (e) {}
+
+    eqButtons.forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-eq') === state.eqPreset);
     });
   }
 
-  // Signal Strength
-  if (state.rssi !== undefined) {
-    if (rssiInfoEl) rssiInfoEl.textContent = `${state.rssi} dBm`;
-    updateSignalBars(state.rssi);
+  // RSSI Signal Strength
+  if (state.rssi !== undefined && rssiInfoEl) {
+    rssiInfoEl.textContent = `${state.rssi} dBm`;
   }
 }
 
-// Event Listeners with Optimistic Updates
-ancButtons.forEach(btn => {
+// ANC Mode Selection
+ancButtons.forEach((btn) => {
   btn.addEventListener('click', async (e) => {
     e.preventDefault();
     const mode = btn.getAttribute('data-mode');
     console.log('[BudsBar UI] ANC clicked:', mode);
-    
+
     // Optimistic UI update
     updateUI({ ancMode: mode });
 
-    // Send to backend if available
     if (window.budsAPI && typeof window.budsAPI.setAncMode === 'function') {
       try {
         const newState = await window.budsAPI.setAncMode(mode);
         updateUI(newState);
       } catch (err) {
-        console.error('Failed to set ANC:', err);
+        console.error('Failed to set ANC mode:', err);
       }
     }
   });
 });
 
+// Game Mode Toggle
 if (chkGameMode) {
   chkGameMode.addEventListener('change', async (e) => {
     const isEnabled = e.target.checked;
     console.log('[BudsBar UI] Game Mode toggled:', isEnabled);
-    
-    // Optimistic UI update
+
     updateUI({ gameMode: isEnabled });
 
     if (window.budsAPI && typeof window.budsAPI.setGameMode === 'function') {
@@ -220,13 +170,13 @@ if (chkGameMode) {
   });
 }
 
-eqPills.forEach(pill => {
-  pill.addEventListener('click', async (e) => {
+// EQ Preset Selection
+eqButtons.forEach((btn) => {
+  btn.addEventListener('click', async (e) => {
     e.preventDefault();
-    const preset = pill.getAttribute('data-eq');
+    const preset = btn.getAttribute('data-eq');
     console.log('[BudsBar UI] EQ clicked:', preset);
 
-    // Optimistic UI update
     updateUI({ eqPreset: preset });
 
     if (window.budsAPI && typeof window.budsAPI.setEqPreset === 'function') {
@@ -234,17 +184,18 @@ eqPills.forEach(pill => {
         const newState = await window.budsAPI.setEqPreset(preset);
         updateUI(newState);
       } catch (err) {
-        console.error('Failed to set EQ:', err);
+        console.error('Failed to set EQ preset:', err);
       }
     }
   });
 });
 
+// Refresh Button
 if (btnRefresh) {
   btnRefresh.addEventListener('click', async () => {
-    btnRefresh.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    btnRefresh.style.transition = 'transform 0.4s ease';
     btnRefresh.style.transform = 'rotate(360deg)';
-    
+
     if (window.budsAPI && typeof window.budsAPI.getState === 'function') {
       try {
         const state = await window.budsAPI.getState();
@@ -252,52 +203,31 @@ if (btnRefresh) {
       } catch (err) {
         console.error('Failed to refresh state:', err);
       }
-    } else {
-      // Gentle offline simulation for preview
-      const l = Math.max(10, currentState.battery.left - Math.floor(Math.random() * 2));
-      updateUI({
-        battery: { ...currentState.battery, left: l }
-      });
     }
 
     setTimeout(() => {
       btnRefresh.style.transition = 'none';
       btnRefresh.style.transform = 'none';
-    }, 550);
+    }, 450);
   });
 }
 
-function handleQuit() {
-  console.log('[BudsBar UI] Quitting app...');
-  if (window.budsAPI && typeof window.budsAPI.quitApp === 'function') {
-    window.budsAPI.quitApp();
-  } else {
-    window.close();
-  }
-}
-
-if (btnHeaderQuit) {
-  btnHeaderQuit.addEventListener('click', handleQuit);
-}
-
-if (btnQuit) {
-  btnQuit.addEventListener('click', handleQuit);
-}
-
+// ⌘Q Shortcut to Quit
 window.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'q') {
-    handleQuit();
+    if (window.budsAPI && typeof window.budsAPI.quitApp === 'function') {
+      window.budsAPI.quitApp();
+    } else {
+      window.close();
+    }
   }
 });
 
-// Initialization
+// Initialize
 async function init() {
-  console.log('[BudsBar UI] Initializing... budsAPI available:', Boolean(window.budsAPI));
-  
   if (window.budsAPI) {
     if (typeof window.budsAPI.onStateChanged === 'function') {
       window.budsAPI.onStateChanged((state) => {
-        console.log('[BudsBar UI] Received state-update:', state);
         updateUI(state);
       });
     }
@@ -307,11 +237,11 @@ async function init() {
         const initialState = await window.budsAPI.getState();
         updateUI(initialState);
       } catch (err) {
-        console.error('Failed to get initial state:', err);
+        console.error('Failed to fetch initial state:', err);
+        updateUI(currentState);
       }
     }
   } else {
-    // Render default state
     updateUI(currentState);
   }
 }

@@ -3,137 +3,355 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BudsBar</title>
+  <title>BudsBar - realme Buds T310</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="window-shell">
-    <!-- Header -->
+  <div class="window-shell" id="windowShell">
+    <!-- Ambient Dynamic Aura Backdrop -->
+    <div class="ambient-glow" id="ambientGlow"></div>
+    <div class="ambient-glow-secondary" id="ambientGlowSec"></div>
+
+    <!-- Header Section -->
     <header class="app-header">
-      <div class="device-info">
-        <div class="device-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="device-brand">
+        <div class="device-avatar" title="realme Buds T310">
+          <svg class="avatar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
           </svg>
         </div>
-        <div class="device-meta">
-          <div class="device-name" id="deviceName">realme Buds T310</div>
-          <div class="device-status">
-            <span class="status-dot" id="statusDot"></span>
-            <span class="status-text" id="statusText">Connected</span>
+        <div class="device-headings">
+          <div class="device-title-row">
+            <h1 class="device-name" id="deviceName">realme Buds T310</h1>
+            <span class="device-badge">12.4mm Dynamic</span>
+          </div>
+          <div class="device-telemetry">
+            <span class="status-indicator">
+              <span class="status-pulse-ring"></span>
+              <span class="status-dot" id="statusDot"></span>
+              <span class="status-label" id="statusText">Connected</span>
+            </span>
+            <span class="telemetry-separator">•</span>
+            <span class="signal-gauge" id="signalGauge" title="Signal Strength (RSSI)">
+              <span class="sig-bar bar-1"></span>
+              <span class="sig-bar bar-2"></span>
+              <span class="sig-bar bar-3"></span>
+              <span class="sig-bar bar-4"></span>
+            </span>
+            <span class="telemetry-separator">•</span>
+            <span class="codec-tag">AAC 48kHz</span>
           </div>
         </div>
       </div>
-      <button class="icon-button" id="btnRefresh" title="Refresh Status" aria-label="Refresh">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="23 4 23 10 17 10"></polyline>
-          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-        </svg>
-      </button>
+
+      <div class="header-actions">
+        <button class="action-btn" id="btnRefresh" title="Resync Hardware Status (buds-ctl)" aria-label="Refresh Status">
+          <svg class="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </button>
+      </div>
     </header>
 
-    <!-- Battery Section -->
-    <section class="battery-grid">
-      <div class="battery-tile" id="cardLeft">
-        <div class="tile-top">
-          <span class="tile-label">Left</span>
-          <span class="tile-pct" id="valLeft">100%</span>
+    <!-- Battery Pods Visualizer (Precision Hardware Art) -->
+    <section class="battery-section" aria-label="Earbuds & Case Battery Status">
+      <!-- Left Earbud Card -->
+      <div class="battery-card" id="cardLeft">
+        <div class="pod-header">
+          <div class="pod-icon-wrap" title="Left Earbud">
+            <svg class="earbud-art left" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="budGradL" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#E2E8F0"/>
+                  <stop offset="50%" stop-color="#94A3B8"/>
+                  <stop offset="100%" stop-color="#475569"/>
+                </linearGradient>
+                <linearGradient id="tipGradL" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#64748B"/>
+                  <stop offset="100%" stop-color="#334155"/>
+                </linearGradient>
+              </defs>
+              <!-- Silicone In-Ear Tip -->
+              <ellipse cx="9" cy="9" rx="6" ry="7" fill="url(#tipGradL)"/>
+              <ellipse cx="7" cy="9" rx="2" ry="3.5" fill="#1E293B"/>
+              <!-- Earbud Body & Acoustic Chamber -->
+              <path d="M12 5C16.4 5 19 8 19 12C19 14.5 17.5 16.5 15.5 17.5L14.5 27C14.5 28.1 13.6 29 12.5 29C11.4 29 10.5 28.1 10.5 27L11 17C9.5 16 8.5 14.2 8.5 12C8.5 8 10 5 12 5Z" fill="url(#budGradL)"/>
+              <!-- Capacitive Touch Stem Groove -->
+              <rect x="12" y="19" width="1.2" height="5" rx="0.6" fill="#334155"/>
+              <!-- Chrome Charging Tip -->
+              <path d="M10.5 27.5C10.5 28.3 11.4 29 12.5 29C13.6 29 14.5 28.3 14.5 27.5V28.5C14.5 29.3 13.6 30 12.5 30C11.4 30 10.5 29.3 10.5 28.5V27.5Z" fill="#CBD5E1"/>
+            </svg>
+            <span class="charging-indicator" id="chargeLeft">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7z"/></svg>
+            </span>
+          </div>
+          <span class="pod-role">Left Bud</span>
         </div>
-        <div class="bar-track">
-          <div class="bar-fill" id="barLeft" style="width: 100%;"></div>
+        <div class="pod-gauge-wrap">
+          <div class="circular-progress" id="circleLeft">
+            <svg class="progress-ring" viewBox="0 0 36 36">
+              <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path class="ring-fill" id="ringLeft" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="pod-value-overlay">
+              <span class="pod-pct" id="valLeft">100%</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="battery-tile" id="cardRight">
-        <div class="tile-top">
-          <span class="tile-label">Right</span>
-          <span class="tile-pct" id="valRight">100%</span>
+      <!-- Right Earbud Card -->
+      <div class="battery-card" id="cardRight">
+        <div class="pod-header">
+          <div class="pod-icon-wrap" title="Right Earbud">
+            <svg class="earbud-art right" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="budGradR" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#E2E8F0"/>
+                  <stop offset="50%" stop-color="#94A3B8"/>
+                  <stop offset="100%" stop-color="#475569"/>
+                </linearGradient>
+                <linearGradient id="tipGradR" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#64748B"/>
+                  <stop offset="100%" stop-color="#334155"/>
+                </linearGradient>
+              </defs>
+              <!-- Silicone In-Ear Tip (Mirrored) -->
+              <ellipse cx="23" cy="9" rx="6" ry="7" fill="url(#tipGradR)"/>
+              <ellipse cx="25" cy="9" rx="2" ry="3.5" fill="#1E293B"/>
+              <!-- Earbud Body & Acoustic Chamber -->
+              <path d="M20 5C15.6 5 13 8 13 12C13 14.5 14.5 16.5 16.5 17.5L17.5 27C17.5 28.1 18.4 29 19.5 29C20.6 29 21.5 28.1 21.5 27L21 17C22.5 16 23.5 14.2 23.5 12C23.5 8 22 5 20 5Z" fill="url(#budGradR)"/>
+              <!-- Capacitive Touch Stem Groove -->
+              <rect x="18.8" y="19" width="1.2" height="5" rx="0.6" fill="#334155"/>
+              <!-- Chrome Charging Tip -->
+              <path d="M17.5 27.5C17.5 28.3 18.4 29 19.5 29C20.6 29 21.5 28.3 21.5 27.5V28.5C21.5 29.3 20.6 30 19.5 30C18.4 30 17.5 29.3 17.5 28.5V27.5Z" fill="#CBD5E1"/>
+            </svg>
+            <span class="charging-indicator" id="chargeRight">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7z"/></svg>
+            </span>
+          </div>
+          <span class="pod-role">Right Bud</span>
         </div>
-        <div class="bar-track">
-          <div class="bar-fill" id="barRight" style="width: 100%;"></div>
+        <div class="pod-gauge-wrap">
+          <div class="circular-progress" id="circleRight">
+            <svg class="progress-ring" viewBox="0 0 36 36">
+              <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path class="ring-fill" id="ringRight" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="pod-value-overlay">
+              <span class="pod-pct" id="valRight">100%</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="battery-tile" id="cardCase">
-        <div class="tile-top">
-          <span class="tile-label">Case</span>
-          <span class="tile-pct" id="valCase">100%</span>
+      <!-- Case Card -->
+      <div class="battery-card" id="cardCase">
+        <div class="pod-header">
+          <div class="pod-icon-wrap" title="Smart Charging Case">
+            <svg class="case-art" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="caseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#CBD5E1"/>
+                  <stop offset="40%" stop-color="#94A3B8"/>
+                  <stop offset="100%" stop-color="#475569"/>
+                </linearGradient>
+              </defs>
+              <!-- Pebble Clamshell Body -->
+              <rect x="5" y="6" width="22" height="20" rx="9" fill="url(#caseGrad)"/>
+              <!-- Lid Opening Seam -->
+              <path d="M5 13H27" stroke="#1E293B" stroke-width="1.2" stroke-linecap="round"/>
+              <!-- Front Micro-LED Indicator -->
+              <circle cx="16" cy="18" r="1.6" fill="#10B981" class="case-led-glow"/>
+              <!-- USB-C Bottom Accent -->
+              <rect x="13.5" y="25" width="5" height="1" rx="0.5" fill="#334155"/>
+            </svg>
+            <span class="charging-indicator" id="chargeCase">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7z"/></svg>
+            </span>
+          </div>
+          <span class="pod-role">Case</span>
         </div>
-        <div class="bar-track">
-          <div class="bar-fill" id="barCase" style="width: 100%;"></div>
+        <div class="pod-gauge-wrap">
+          <div class="circular-progress" id="circleCase">
+            <svg class="progress-ring" viewBox="0 0 36 36">
+              <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path class="ring-fill" id="ringCase" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            </svg>
+            <div class="pod-value-overlay">
+              <span class="pod-pct" id="valCase">100%</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Noise Control Section -->
-    <section class="control-panel">
-      <div class="panel-header">
-        <span class="panel-title">Noise Control</span>
+    <!-- Noise Control Section (macOS Segmented Studio) -->
+    <section class="control-group" aria-label="Active Noise Control">
+      <div class="group-header">
+        <span class="group-title">Noise Control</span>
+        <div class="shortcut-keys" title="Global Shortcut: Press ⌘+Shift+N to cycle modes">
+          <kbd>⌘</kbd><kbd>⇧</kbd><kbd>N</kbd>
+        </div>
       </div>
 
-      <div class="segmented-control" id="ancSegmented">
-        <button class="segment-btn" data-mode="cancellation" id="btnAncCancel">
-          <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <path d="m9 12 2 2 4-4"/>
-          </svg>
-          <span class="segment-label">Noise Cancellation</span>
+      <div class="anc-selector" id="ancSegmented" role="tablist">
+        <!-- Animated Sliding Background Pill Indicator -->
+        <div class="anc-pill-slider" id="ancPillSlider"></div>
+
+        <button class="anc-pill" data-mode="cancellation" id="btnAncCancel" role="tab" aria-selected="false">
+          <div class="pill-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="pill-info">
+            <span class="pill-name">Cancellation</span>
+            <span class="pill-sub">46dB Active</span>
+          </div>
         </button>
 
-        <button class="segment-btn" data-mode="off" id="btnAncOff">
-          <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"/>
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-          </svg>
-          <span class="segment-label">Normal</span>
+        <button class="anc-pill active" data-mode="off" id="btnAncOff" role="tab" aria-selected="true">
+          <div class="pill-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+          </div>
+          <div class="pill-info">
+            <span class="pill-name">Normal</span>
+            <span class="pill-sub">Passive Iso</span>
+          </div>
         </button>
 
-        <button class="segment-btn" data-mode="transparency" id="btnAncTrans">
-          <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-          </svg>
-          <span class="segment-label">Transparent</span>
+        <button class="anc-pill" data-mode="transparency" id="btnAncTrans" role="tab" aria-selected="false">
+          <div class="pill-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+          </div>
+          <div class="pill-info">
+            <span class="pill-name">Transparent</span>
+            <span class="pill-sub">Awareness</span>
+          </div>
         </button>
       </div>
 
-      <div class="mode-caption" id="ancCaption">Normal mode (Noise control off)</div>
+      <!-- Real-time Status Caption Pill -->
+      <div class="anc-badge-status" id="ancCaption">
+        <span class="badge-dot"></span>
+        <span class="badge-text">Normal mode • Noise control off</span>
+      </div>
     </section>
 
-    <!-- Equalizer Preset Section -->
-    <section class="control-panel">
-      <div class="panel-header">
-        <span class="panel-title">Equalizer Preset</span>
+    <!-- Equalizer Section (Live Acoustic Waveforms) -->
+    <section class="control-group" aria-label="Equalizer Sound Stage">
+      <div class="group-header">
+        <div class="group-title-wrap">
+          <span class="group-title">Sound Profile (EQ)</span>
+          <span class="group-sublabel">Airoha Hardware DSP</span>
+        </div>
+        <span class="eq-status-badge" id="eqStatusBadge">Bass Boost+</span>
       </div>
 
       <div class="eq-grid" id="eqGrid">
-        <button class="eq-btn active" data-eq="bass_boost">Bass Boost+</button>
-        <button class="eq-btn" data-eq="balanced">Balanced</button>
-        <button class="eq-btn" data-eq="clear_vocals">Clear Vocals</button>
-        <button class="eq-btn" data-eq="bright">Nature Bright</button>
+        <button class="eq-card active" data-eq="bass_boost">
+          <div class="eq-wave-graphic bass">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="eq-details">
+            <span class="eq-name">Bass Boost+</span>
+            <span class="eq-desc">12.4mm Dynamic punch</span>
+          </div>
+        </button>
+
+        <button class="eq-card" data-eq="balanced">
+          <div class="eq-wave-graphic balanced">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="eq-details">
+            <span class="eq-name">Balanced</span>
+            <span class="eq-desc">Flat 20Hz–20kHz studio</span>
+          </div>
+        </button>
+
+        <button class="eq-card" data-eq="clear_vocals">
+          <div class="eq-wave-graphic vocals">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="eq-details">
+            <span class="eq-name">Clear Vocals</span>
+            <span class="eq-desc">1kHz–4kHz voice clarity</span>
+          </div>
+        </button>
+
+        <button class="eq-card" data-eq="bright">
+          <div class="eq-wave-graphic bright">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="eq-details">
+            <span class="eq-name">Nature Bright</span>
+            <span class="eq-desc">8kHz–16kHz airy treble</span>
+          </div>
+        </button>
       </div>
     </section>
 
-    <!-- Game Mode Section -->
-    <section class="control-panel toggle-row">
-      <div class="toggle-text">
-        <span class="toggle-title">Game Mode</span>
-        <span class="toggle-desc">Low latency audio</span>
+    <!-- Game Mode (Super Low Latency 45ms Accelerator) -->
+    <section class="game-mode-banner">
+      <div class="game-info">
+        <div class="game-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="12" x2="10" y2="12"></line>
+            <line x1="8" y1="10" x2="8" y2="14"></line>
+            <line x1="15" y1="13" x2="15.01" y2="13"></line>
+            <line x1="18" y1="11" x2="18.01" y2="11"></line>
+            <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+          </svg>
+        </div>
+        <div class="game-text">
+          <div class="game-title-row">
+            <span class="game-title">Game Mode</span>
+            <span class="game-latency-tag" id="gameLatencyTag">45ms Low Latency</span>
+          </div>
+          <span class="game-sub">Ultra-fast dual-channel audio sync</span>
+        </div>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="chkGameMode">
-        <span class="slider"></span>
-      </label>
+      <div class="game-action">
+        <div class="shortcut-keys mini" title="Toggle Game Mode with ⌘+Shift+G">
+          <kbd>⌘</kbd><kbd>⇧</kbd><kbd>G</kbd>
+        </div>
+        <label class="apple-switch" title="Toggle Game Mode">
+          <input type="checkbox" id="chkGameMode">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
     </section>
 
-    <!-- Footer Status (Clean, No Quit Button) -->
+    <!-- Footer Bar -->
     <footer class="app-footer">
-      <div class="footer-info">
-        <span id="fwInfo">FW 1.1.0.89</span>
-        <span class="dot">•</span>
-        <span id="rssiInfo">-52 dBm</span>
+      <div class="footer-meta">
+        <span class="meta-item" title="Firmware Version">
+          <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+          <span id="fwInfo">FW 1.1.0.89</span>
+        </span>
+        <span class="meta-dot">•</span>
+        <span class="meta-item" title="Bluetooth Link Strength">
+          <span id="rssiInfo">-52 dBm</span>
+        </span>
+        <span class="meta-dot">•</span>
+        <span class="meta-item link-health" id="linkHealth">Excellent</span>
       </div>
-      <div class="footer-hint">⌘Q to quit</div>
+      <div class="footer-right">
+        <button class="quit-link" id="btnQuit" title="Quit BudsBar (⌘Q)">
+          <kbd>⌘</kbd><kbd>Q</kbd>
+        </button>
+      </div>
     </footer>
   </div>
 

@@ -1,3 +1,7 @@
+// ==========================================================================
+// BudsBar - Renderer & State Synchronization
+// ==========================================================================
+
 // Initial State
 let currentState = {
   connected: true,
@@ -20,57 +24,138 @@ let currentState = {
   rssi: -52
 };
 
-// DOM Elements
+// DOM References
 const deviceNameEl = document.getElementById('deviceName');
 const statusDotEl = document.getElementById('statusDot');
 const statusTextEl = document.getElementById('statusText');
 const btnRefresh = document.getElementById('btnRefresh');
+const ambientGlowEl = document.getElementById('ambientGlow');
+const ambientGlowSecEl = document.getElementById('ambientGlowSec');
 
+// Battery Elements
 const valLeftEl = document.getElementById('valLeft');
 const valRightEl = document.getElementById('valRight');
 const valCaseEl = document.getElementById('valCase');
 
-const barLeftEl = document.getElementById('barLeft');
-const barRightEl = document.getElementById('barRight');
-const barCaseEl = document.getElementById('barCase');
+const ringLeftEl = document.getElementById('ringLeft');
+const ringRightEl = document.getElementById('ringRight');
+const ringCaseEl = document.getElementById('ringCase');
 
-const ancButtons = document.querySelectorAll('.segment-btn, .segmented-option');
+const chargeLeftEl = document.getElementById('chargeLeft');
+const chargeRightEl = document.getElementById('chargeRight');
+const chargeCaseEl = document.getElementById('chargeCase');
+
+// Control Groups
+const ancButtons = document.querySelectorAll('.anc-pill, .segment-btn, .segmented-option');
+const ancPillSlider = document.getElementById('ancPillSlider');
 const ancCaptionEl = document.getElementById('ancCaption');
 
-const eqButtons = document.querySelectorAll('.eq-btn, .eq-chip');
+const eqButtons = document.querySelectorAll('.eq-card, .eq-btn, .eq-chip');
+const eqStatusBadgeEl = document.getElementById('eqStatusBadge');
 const chkGameMode = document.getElementById('chkGameMode');
+const gameBannerEl = document.querySelector('.game-mode-banner');
+const gameLatencyTag = document.getElementById('gameLatencyTag');
 
+// Telemetry Elements
 const fwInfoEl = document.getElementById('fwInfo');
 const rssiInfoEl = document.getElementById('rssiInfo');
+const linkHealthEl = document.getElementById('linkHealth');
+const signalGaugeEl = document.getElementById('signalGauge');
+const btnQuit = document.getElementById('btnQuit');
 
-// Captions for ANC states
-const ANC_CAPTIONS = {
-  'cancellation': 'Active Noise Cancellation',
-  'off': 'Normal mode (Noise control off)',
-  'transparency': 'Transparent mode (Ambient pass-through)'
+// High-Fidelity Captions for ANC states
+const ANC_CONFIG = {
+  'cancellation': {
+    caption: 'Active Noise Cancellation • 46dB Hybrid Cut',
+    dotColor: 'var(--color-teal)',
+    glowClass: '',
+    sliderClass: 'cancellation'
+  },
+  'off': {
+    caption: 'Normal mode • Noise control off',
+    dotColor: '#94A3B8',
+    glowClass: 'off',
+    sliderClass: 'off'
+  },
+  'transparency': {
+    caption: 'Transparency • Ambient sound pass-through',
+    dotColor: 'var(--color-violet)',
+    glowClass: 'transparency',
+    sliderClass: 'transparency'
+  }
 };
 
-// Update Battery Bar Fill
-function updateBatteryBar(barEl, pct) {
-  if (!barEl) return;
+const EQ_LABELS = {
+  'bass_boost': 'Bass Boost+',
+  'balanced': 'Balanced',
+  'clear_vocals': 'Clear Vocals',
+  'bright': 'Nature Bright'
+};
+
+// Update Circular Battery Ring Gauge
+function updateBatteryRing(ringEl, pct) {
+  if (!ringEl) return;
   const clamped = Math.max(0, Math.min(100, pct));
-  barEl.style.width = `${clamped}%`;
+  ringEl.setAttribute('stroke-dasharray', `${clamped}, 100`);
 
   if (clamped <= 20) {
-    barEl.style.backgroundColor = 'var(--color-red)';
+    ringEl.style.stroke = 'var(--color-red)';
+    ringEl.style.filter = 'drop-shadow(0 0 6px var(--color-red-glow))';
   } else if (clamped <= 35) {
-    barEl.style.backgroundColor = 'var(--color-amber)';
+    ringEl.style.stroke = 'var(--color-amber)';
+    ringEl.style.filter = 'drop-shadow(0 0 6px var(--color-amber-glow))';
   } else {
-    barEl.style.backgroundColor = 'var(--color-green)';
+    ringEl.style.stroke = 'var(--color-teal)';
+    ringEl.style.filter = 'drop-shadow(0 0 6px var(--color-teal-glow))';
   }
 }
 
-// Render Complete State to DOM
+// Update Bluetooth RSSI Signal Bars & Link Health
+function updateSignalBars(rssi) {
+  if (!signalGaugeEl) return;
+  const bars = signalGaugeEl.querySelectorAll('.sig-bar');
+  if (!bars || bars.length < 4) return;
+
+  let activeCount = 4;
+  let healthText = 'Excellent';
+  let healthColor = 'var(--color-teal)';
+
+  if (rssi < -85) {
+    activeCount = 1;
+    healthText = 'Weak';
+    healthColor = 'var(--color-red)';
+  } else if (rssi < -75) {
+    activeCount = 2;
+    healthText = 'Fair';
+    healthColor = 'var(--color-amber)';
+  } else if (rssi < -65) {
+    activeCount = 3;
+    healthText = 'Good';
+    healthColor = 'var(--color-teal)';
+  }
+
+  bars.forEach((bar, idx) => {
+    if (idx < activeCount) {
+      bar.style.background = healthColor;
+      bar.style.opacity = '1';
+    } else {
+      bar.style.background = 'rgba(255, 255, 255, 0.16)';
+      bar.style.opacity = '0.5';
+    }
+  });
+
+  if (linkHealthEl) {
+    linkHealthEl.textContent = healthText;
+    linkHealthEl.style.color = healthColor;
+  }
+}
+
+// Render Complete State to UI
 function updateUI(state) {
   if (!state) return;
   currentState = { ...currentState, ...state };
 
-  // Device Info
+  // Device Info & Firmware
   if (state.deviceInfo) {
     if (deviceNameEl) deviceNameEl.textContent = state.deviceInfo.name || 'realme Buds T310';
     if (fwInfoEl) fwInfoEl.textContent = `FW ${state.deviceInfo.firmwareVersion || '1.1.0.89'}`;
@@ -83,18 +168,23 @@ function updateUI(state) {
     }
     if (statusTextEl) {
       statusTextEl.textContent = state.connected ? 'Connected' : 'Disconnected';
+      statusTextEl.style.color = state.connected ? 'var(--text-secondary)' : 'var(--color-red)';
     }
   }
 
-  // Battery
+  // Battery Levels & Gauges
   if (state.battery) {
     if (valLeftEl) valLeftEl.textContent = `${state.battery.left}%`;
     if (valRightEl) valRightEl.textContent = `${state.battery.right}%`;
     if (valCaseEl) valCaseEl.textContent = `${state.battery.case}%`;
 
-    updateBatteryBar(barLeftEl, state.battery.left);
-    updateBatteryBar(barRightEl, state.battery.right);
-    updateBatteryBar(barCaseEl, state.battery.case);
+    updateBatteryRing(ringLeftEl, state.battery.left);
+    updateBatteryRing(ringRightEl, state.battery.right);
+    updateBatteryRing(ringCaseEl, state.battery.case);
+
+    if (chargeLeftEl) chargeLeftEl.classList.toggle('active', Boolean(state.battery.chargingLeft));
+    if (chargeRightEl) chargeRightEl.classList.toggle('active', Boolean(state.battery.chargingRight));
+    if (chargeCaseEl) chargeCaseEl.classList.toggle('active', Boolean(state.battery.chargingCase));
   }
 
   // ANC Mode
@@ -102,17 +192,47 @@ function updateUI(state) {
     try { localStorage.setItem('budsbar_anc', state.ancMode); } catch (e) {}
 
     ancButtons.forEach((btn) => {
-      btn.classList.toggle('active', btn.getAttribute('data-mode') === state.ancMode);
+      const isSelected = btn.getAttribute('data-mode') === state.ancMode;
+      btn.classList.toggle('active', isSelected);
+      btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
     });
 
+    const cfg = ANC_CONFIG[state.ancMode] || ANC_CONFIG['off'];
+
+    // Update Sliding Indicator Pill
+    if (ancPillSlider) {
+      ancPillSlider.className = `anc-pill-slider ${cfg.sliderClass}`;
+    }
+
     if (ancCaptionEl) {
-      ancCaptionEl.textContent = ANC_CAPTIONS[state.ancMode] || '';
+      const dot = ancCaptionEl.querySelector('.badge-dot');
+      const text = ancCaptionEl.querySelector('.badge-text') || ancCaptionEl;
+      if (dot) dot.style.background = cfg.dotColor;
+      if (text) text.textContent = cfg.caption;
+    }
+
+    if (ambientGlowEl) {
+      if (state.gameMode) {
+        ambientGlowEl.className = 'ambient-glow game';
+      } else {
+        ambientGlowEl.className = `ambient-glow ${cfg.glowClass}`;
+      }
     }
   }
 
   // Game Mode
-  if (chkGameMode && state.gameMode !== undefined) {
-    chkGameMode.checked = Boolean(state.gameMode);
+  if (state.gameMode !== undefined) {
+    if (chkGameMode) chkGameMode.checked = Boolean(state.gameMode);
+    if (gameBannerEl) gameBannerEl.classList.toggle('active', Boolean(state.gameMode));
+    if (gameLatencyTag) {
+      gameLatencyTag.textContent = state.gameMode ? '45ms Active' : 'Normal 180ms';
+      gameLatencyTag.style.background = state.gameMode ? 'rgba(6, 182, 212, 0.22)' : 'rgba(255, 255, 255, 0.08)';
+      gameLatencyTag.style.color = state.gameMode ? 'var(--color-cyan)' : 'var(--text-muted)';
+      gameLatencyTag.style.borderColor = state.gameMode ? 'rgba(6, 182, 212, 0.45)' : 'transparent';
+    }
+    if (ambientGlowSecEl) {
+      ambientGlowSecEl.style.opacity = state.gameMode ? '1' : '0.4';
+    }
   }
 
   // EQ Preset
@@ -122,22 +242,31 @@ function updateUI(state) {
     eqButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-eq') === state.eqPreset);
     });
+
+    if (eqStatusBadgeEl) {
+      eqStatusBadgeEl.textContent = EQ_LABELS[state.eqPreset] || state.eqPreset;
+    }
   }
 
-  // RSSI Signal Strength
-  if (state.rssi !== undefined && rssiInfoEl) {
-    rssiInfoEl.textContent = `${state.rssi} dBm`;
+  // RSSI Signal Strength & Telemetry
+  if (state.rssi !== undefined) {
+    if (rssiInfoEl) rssiInfoEl.textContent = `${state.rssi} dBm`;
+    updateSignalBars(state.rssi);
   }
 }
+
+// ==========================================================================
+// User Interaction Handlers
+// ==========================================================================
 
 // ANC Mode Selection
 ancButtons.forEach((btn) => {
   btn.addEventListener('click', async (e) => {
     e.preventDefault();
     const mode = btn.getAttribute('data-mode');
-    console.log('[BudsBar UI] ANC clicked:', mode);
+    if (!mode) return;
 
-    // Optimistic UI update
+    // Immediate optimistic update
     updateUI({ ancMode: mode });
 
     if (window.budsAPI && typeof window.budsAPI.setAncMode === 'function') {
@@ -155,8 +284,6 @@ ancButtons.forEach((btn) => {
 if (chkGameMode) {
   chkGameMode.addEventListener('change', async (e) => {
     const isEnabled = e.target.checked;
-    console.log('[BudsBar UI] Game Mode toggled:', isEnabled);
-
     updateUI({ gameMode: isEnabled });
 
     if (window.budsAPI && typeof window.budsAPI.setGameMode === 'function') {
@@ -175,7 +302,7 @@ eqButtons.forEach((btn) => {
   btn.addEventListener('click', async (e) => {
     e.preventDefault();
     const preset = btn.getAttribute('data-eq');
-    console.log('[BudsBar UI] EQ clicked:', preset);
+    if (!preset) return;
 
     updateUI({ eqPreset: preset });
 
@@ -190,10 +317,10 @@ eqButtons.forEach((btn) => {
   });
 });
 
-// Refresh Button
+// Refresh Button with Animation
 if (btnRefresh) {
   btnRefresh.addEventListener('click', async () => {
-    btnRefresh.style.transition = 'transform 0.4s ease';
+    btnRefresh.style.transition = 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)';
     btnRefresh.style.transform = 'rotate(360deg)';
 
     if (window.budsAPI && typeof window.budsAPI.getState === 'function') {
@@ -208,11 +335,22 @@ if (btnRefresh) {
     setTimeout(() => {
       btnRefresh.style.transition = 'none';
       btnRefresh.style.transform = 'none';
-    }, 450);
+    }, 480);
   });
 }
 
-// ⌘Q Shortcut to Quit
+// Dedicated Quit Button
+if (btnQuit) {
+  btnQuit.addEventListener('click', () => {
+    if (window.budsAPI && typeof window.budsAPI.quitApp === 'function') {
+      window.budsAPI.quitApp();
+    } else {
+      window.close();
+    }
+  });
+}
+
+// ⌘Q Shortcut to Quit App
 window.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'q') {
     if (window.budsAPI && typeof window.budsAPI.quitApp === 'function') {
@@ -223,7 +361,7 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Initialize
+// Initialize State
 async function init() {
   if (window.budsAPI) {
     if (typeof window.budsAPI.onStateChanged === 'function') {

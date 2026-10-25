@@ -5,9 +5,9 @@
 // Initial State
 let currentState = {
   connected: true,
-  ancMode: localStorage.getItem('budsbar_anc') || 'off', // 'cancellation' | 'off' | 'transparency'
+  ancMode: 'off', // 'cancellation' | 'off' | 'transparency'
   gameMode: false,
-  eqPreset: localStorage.getItem('budsbar_eq') || 'bass_boost', // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
+  eqPreset: 'bass_boost', // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
   battery: {
     left: 100,
     right: 100,
@@ -186,7 +186,6 @@ function updateUI(state) {
 
   // ANC Mode
   if (state.ancMode) {
-    try { localStorage.setItem('budsbar_anc', state.ancMode); } catch (e) {}
 
     ancButtons.forEach((btn) => {
       const isSelected = btn.getAttribute('data-mode') === state.ancMode;
@@ -234,7 +233,6 @@ function updateUI(state) {
 
   // EQ Preset
   if (state.eqPreset) {
-    try { localStorage.setItem('budsbar_eq', state.eqPreset); } catch (e) {}
 
     eqButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-eq') === state.eqPreset);
@@ -360,6 +358,14 @@ window.addEventListener('keydown', (e) => {
 
 // Initialize State
 async function init() {
+  try {
+    localStorage.removeItem('budsbar_anc');
+    localStorage.removeItem('budsbar_eq');
+  } catch (e) {}
+
+  // Apply default state immediately to keep slider aligned to Normal
+  updateUI(currentState);
+
   if (window.budsAPI) {
     if (typeof window.budsAPI.onStateChanged === 'function') {
       window.budsAPI.onStateChanged((state) => {
@@ -373,11 +379,8 @@ async function init() {
         updateUI(initialState);
       } catch (err) {
         console.error('Failed to fetch initial state:', err);
-        updateUI(currentState);
       }
     }
-  } else {
-    updateUI(currentState);
   }
 }
 

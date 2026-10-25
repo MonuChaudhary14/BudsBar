@@ -1014,39 +1014,11 @@ input:checked + .switch-slider:before {
   color: var(--text-muted);
 }
 
-.footer-meta {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-}
-
-.meta-icon {
-  width: 12px;
-  height: 12px;
-  opacity: 0.6;
-}
-
-.meta-dot {
-  opacity: 0.4;
-}
-
-.link-health {
-  color: var(--color-teal);
-  font-weight: 600;
-}
-
-.footer-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.footer-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: -0.1px;
 }
 
 .quit-link {

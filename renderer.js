@@ -56,10 +56,7 @@ const chkGameMode = document.getElementById('chkGameMode');
 const gameBannerEl = document.querySelector('.game-mode-banner');
 const gameLatencyTag = document.getElementById('gameLatencyTag');
 
-// Telemetry Elements
-const fwInfoEl = document.getElementById('fwInfo');
-const rssiInfoEl = document.getElementById('rssiInfo');
-const linkHealthEl = document.getElementById('linkHealth');
+// Footer Actions
 const signalGaugeEl = document.getElementById('signalGauge');
 const btnQuit = document.getElementById('btnQuit');
 

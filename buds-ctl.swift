@@ -95,6 +95,30 @@ func getBluetoothInfo() -> [String: Any]? {
     return nil
 }
 
+let stateFilePath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".budsbar-state.json").path
+
+func loadPersistedState() -> [String: Any] {
+    if let data = try? Data(contentsOf: URL(fileURLWithPath: stateFilePath)),
+       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+        return json
+    }
+    return [
+        "anc": "off",
+        "game": false,
+        "eq": "bass_boost"
+    ]
+}
+
+func savePersistedState(_ dict: [String: Any]) {
+    var current = loadPersistedState()
+    for (k, v) in dict {
+        current[k] = v
+    }
+    if let data = try? JSONSerialization.data(withJSONObject: current, options: .prettyPrinted) {
+        try? data.write(to: URL(fileURLWithPath: stateFilePath))
+    }
+}
+
 // Command Line Parsing
 let args = CommandLine.arguments
 
@@ -102,12 +126,15 @@ if args.count > 1 {
     let cmd = args[1]
     
     if cmd == "status" {
-        if let info = getBluetoothInfo() {
-            if let data = try? JSONSerialization.data(withJSONObject: info),
-               let str = String(data: data, encoding: .utf8) {
-                print(str)
-                exit(0)
-            }
+        var result = getBluetoothInfo() ?? ["connected": false]
+        let persisted = loadPersistedState()
+        for (k, v) in persisted {
+            result[k] = v
+        }
+        if let data = try? JSONSerialization.data(withJSONObject: result),
+           let str = String(data: data, encoding: .utf8) {
+            print(str)
+            exit(0)
         }
         print("{\"connected\":false}")
         exit(0)
@@ -117,19 +144,26 @@ if args.count > 1 {
 
     if cmd == "anc" && args.count > 2 {
         let mode = args[2].lowercased()
-        var modeByte: UInt8 = 0x08 // Default cancellation
-        if mode == "transparency" {
-            modeByte = 0x01
-        } else if mode == "off" || mode == "normal" {
+        var modeByte: UInt8 = 0x08
+        var normalized = "cancellation"
+        if mode == "transparency" || mode == "transparent" {
             modeByte = 0x02
+            normalized = "transparency"
+        } else if mode == "off" || mode == "normal" {
+            modeByte = 0x01
+            normalized = "off"
         } else {
-            modeByte = 0x08 // cancellation
+            modeByte = 0x08
+            normalized = "cancellation"
         }
         
         // Command 1028 (0x0404) in Little Endian framed with OPPOv1 (AA 0A 00 00 ...)
         let packet: [UInt8] = [0xAA, 0x0A, 0x00, 0x00, 0x04, 0x04, 0x01, 0x03, 0x00, 0x01, 0x01, modeByte]
         let ok = sendCommand(address: targetAddr, packet: packet)
-        print("{\"status\":\"\(ok ? "ok" : "fail")\",\"anc\":\"\(mode)\"}")
+        if ok {
+            savePersistedState(["anc": normalized])
+        }
+        print("{\"status\":\"\(ok ? "ok" : "fail")\",\"anc\":\"\(normalized)\"}")
         exit(0)
     }
 
@@ -138,6 +172,9 @@ if args.count > 1 {
         // Command 1027 (0x0403) feature 6 framed with OPPOv1
         let packet: [UInt8] = [0xAA, 0x09, 0x00, 0x00, 0x03, 0x04, 0x01, 0x02, 0x00, 0x06, isEnabled ? 0x01 : 0x00]
         let ok = sendCommand(address: targetAddr, packet: packet)
+        if ok {
+            savePersistedState(["game": isEnabled])
+        }
         print("{\"status\":\"\(ok ? "ok" : "fail")\",\"game\":\(isEnabled)}")
         exit(0)
     }
@@ -148,21 +185,28 @@ if args.count > 1 {
         if preset == "bass_boost" { eqByte = 0x01 }
         else if preset == "clear_vocals" { eqByte = 0x00 }
         else if preset == "bright" { eqByte = 0x02 }
+        else if preset == "balanced" { eqByte = 0x00 }
         
         // Command 1030 (0x0406) framed with OPPOv1
         let packet: [UInt8] = [0xAA, 0x08, 0x00, 0x00, 0x06, 0x04, 0x01, 0x01, 0x00, eqByte]
         let ok = sendCommand(address: targetAddr, packet: packet)
+        if ok {
+            savePersistedState(["eq": preset])
+        }
         print("{\"status\":\"\(ok ? "ok" : "fail")\",\"eq\":\"\(preset)\"}")
         exit(0)
     }
 }
 
 // Default
-if let info = getBluetoothInfo() {
-    if let data = try? JSONSerialization.data(withJSONObject: info),
-       let str = String(data: data, encoding: .utf8) {
-        print(str)
-        exit(0)
-    }
+var result = getBluetoothInfo() ?? ["connected": false]
+let persisted = loadPersistedState()
+for (k, v) in persisted {
+    result[k] = v
+}
+if let data = try? JSONSerialization.data(withJSONObject: result),
+   let str = String(data: data, encoding: .utf8) {
+    print(str)
+    exit(0)
 }
 print("{\"connected\":false}")

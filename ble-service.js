@@ -1,12 +1,40 @@
 import EventEmitter from 'events';
 import { execFile } from 'child_process';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
+import os from 'os';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const STATE_FILE = path.join(os.homedir(), '.budsbar-state.json');
+
+function loadPersistedState() {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      const content = fs.readFileSync(STATE_FILE, 'utf8');
+      return JSON.parse(content);
+    }
+  } catch (e) {
+    console.error('[BudsBar] Error reading state file:', e);
+  }
+  return {
+    anc: 'off',
+    game: false,
+    eq: 'bass_boost'
+  };
+}
+
+function savePersistedState(data) {
+  try {
+    const existing = loadPersistedState();
+    const merged = { ...existing, ...data };
+    fs.writeFileSync(STATE_FILE, JSON.stringify(merged, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[BudsBar] Error writing state file:', e);
+  }
+}
 
 function getCtlBinary() {
   const local = path.join(__dirname, 'buds-ctl');
@@ -32,12 +60,15 @@ export class EarbudsService extends EventEmitter {
       mac: '84:9D:4B:FA:59:55'
     };
     
+    // Load persisted hardware state
+    const saved = loadPersistedState();
+
     // Live State
     this.state = {
       connected: true,
-      ancMode: 'cancellation', // 'cancellation' | 'off' | 'transparency'
-      gameMode: false,
-      eqPreset: 'bass_boost',  // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
+      ancMode: saved.anc || 'off', // 'cancellation' | 'off' | 'transparency'
+      gameMode: saved.game !== undefined ? Boolean(saved.game) : false,
+      eqPreset: saved.eq || 'bass_boost',  // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
       battery: {
         left: 100,
         right: 100,
@@ -54,7 +85,7 @@ export class EarbudsService extends EventEmitter {
   }
 
   init() {
-    // Immediate initial sync
+    // Immediate initial sync from device / buds-ctl
     this.syncRealDevice();
     this.startHeartbeat();
   }
@@ -80,6 +111,26 @@ export class EarbudsService extends EventEmitter {
           this.state.battery.left = batteryVal;
           this.state.battery.right = batteryVal;
           this.state.battery.case = batteryVal;
+          changed = true;
+        }
+
+        // Restore identified hardware ANC mode
+        if (info.anc && ['cancellation', 'off', 'transparency'].includes(info.anc)) {
+          if (this.state.ancMode !== info.anc) {
+            this.state.ancMode = info.anc;
+            changed = true;
+          }
+        }
+
+        // Restore identified Game Mode
+        if (info.game !== undefined && this.state.gameMode !== Boolean(info.game)) {
+          this.state.gameMode = Boolean(info.game);
+          changed = true;
+        }
+
+        // Restore identified EQ preset
+        if (info.eq && this.state.eqPreset !== info.eq) {
+          this.state.eqPreset = info.eq;
           changed = true;
         }
 
@@ -109,6 +160,7 @@ export class EarbudsService extends EventEmitter {
   setAncMode(mode) {
     if (!['cancellation', 'off', 'transparency'].includes(mode)) return;
     this.state.ancMode = mode;
+    savePersistedState({ anc: mode });
     
     // Send to hardware via native RFCOMM channel
     execFile(ctlBinary, ['anc', mode], (err, stdout) => {
@@ -132,6 +184,7 @@ export class EarbudsService extends EventEmitter {
 
   setGameMode(enabled) {
     this.state.gameMode = Boolean(enabled);
+    savePersistedState({ game: this.state.gameMode });
     
     execFile(ctlBinary, ['game', this.state.gameMode ? 'on' : 'off'], (err, stdout) => {
       if (err) console.error('Error sending Game Mode to earbud:', err);
@@ -148,6 +201,7 @@ export class EarbudsService extends EventEmitter {
 
   setEqPreset(preset) {
     this.state.eqPreset = preset;
+    savePersistedState({ eq: preset });
 
     execFile(ctlBinary, ['eq', preset], (err, stdout) => {
       if (err) console.error('Error sending EQ to earbud:', err);

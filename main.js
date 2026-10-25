@@ -49,6 +49,12 @@ function toggleWindow() {
   if (window.isVisible()) {
     window.hide();
   } else {
+    // Immediate state sync whenever opened
+    earbudsService.syncRealDevice();
+    const currentState = earbudsService.getState();
+    if (window.webContents) {
+      window.webContents.send('buds:state-update', currentState);
+    }
     const { x, y } = getWindowPosition();
     window.setPosition(x, y, false);
     window.show();
@@ -58,8 +64,8 @@ function toggleWindow() {
 
 function createWindow() {
   window = new BrowserWindow({
-    width: 340,
-    height: 520,
+    width: 380,
+    height: 540,
     show: false,
     frame: false,
     resizable: false,
@@ -155,8 +161,8 @@ app.whenReady().then(() => {
       label: 'Noise Control',
       submenu: [
         { label: 'Noise Cancellation', click: () => earbudsService.setAncMode('cancellation') },
-        { label: 'Off', click: () => earbudsService.setAncMode('off') },
-        { label: 'Ambient / Transparency', click: () => earbudsService.setAncMode('transparency') }
+        { label: 'Normal', click: () => earbudsService.setAncMode('off') },
+        { label: 'Transparent', click: () => earbudsService.setAncMode('transparency') }
       ]
     },
     { type: 'separator' },

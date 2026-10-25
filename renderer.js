@@ -1,9 +1,9 @@
 // Fallback / Initial State
 let currentState = {
   connected: true,
-  ancMode: 'cancellation', // 'cancellation' | 'off' | 'transparency'
+  ancMode: localStorage.getItem('budsbar_anc') || 'off', // 'cancellation' | 'off' | 'transparency'
   gameMode: false,
-  eqPreset: 'bass_boost',  // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
+  eqPreset: localStorage.getItem('budsbar_eq') || 'bass_boost',  // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
   battery: {
     left: 85,
     right: 80,
@@ -21,6 +21,7 @@ let currentState = {
 };
 
 // DOM Elements
+const appShell = document.getElementById('appShell');
 const deviceNameEl = document.getElementById('deviceName');
 const statusDotEl = document.getElementById('statusDot');
 const statusTextEl = document.getElementById('statusText');
@@ -41,6 +42,7 @@ const chargeCaseEl = document.getElementById('chargeCase');
 const ancSliderEl = document.getElementById('ancSlider');
 const ancButtons = document.querySelectorAll('.segmented-option, .anc-btn');
 const ancCaptionEl = document.getElementById('ancCaption');
+const ancDbBadge = document.getElementById('ancDbBadge');
 
 const eqPills = document.querySelectorAll('.eq-chip, .eq-pill');
 const chkGameMode = document.getElementById('chkGameMode');
@@ -52,9 +54,15 @@ const btnQuit = document.getElementById('btnQuit');
 
 // Captions for ANC states
 const ANC_CAPTIONS = {
-  'cancellation': '46 dB Hybrid Active Noise Cancellation',
-  'off': 'Noise control off (Passive isolation)',
-  'transparency': 'Ambient sound pass-through active'
+  'cancellation': '46 dB Active Noise Cancellation',
+  'transparency': 'Transparent mode (Ambient pass-through)',
+  'off': 'Normal mode (Noise control off)'
+};
+
+const ANC_DB_TEXT = {
+  'cancellation': '46 dB',
+  'transparency': 'LIVE',
+  'off': 'NORM'
 };
 
 // Update Battery Ring Stroke
@@ -65,13 +73,31 @@ function setRingLevel(ringEl, pct, isCase = false) {
 
   if (!isCase) {
     if (clamped <= 20) {
-      ringEl.style.stroke = '#ef4444'; // Red
+      ringEl.style.stroke = 'var(--accent-red)';
+      ringEl.style.filter = 'drop-shadow(0 0 3px var(--accent-red-glow))';
     } else if (clamped <= 40) {
-      ringEl.style.stroke = 'var(--accent-amber)'; // Amber
+      ringEl.style.stroke = 'var(--accent-amber)';
+      ringEl.style.filter = 'drop-shadow(0 0 3px var(--accent-amber-glow))';
     } else {
-      ringEl.style.stroke = 'var(--accent-cyan)'; // Cyan
+      ringEl.style.stroke = 'var(--accent-cyan)';
+      ringEl.style.filter = 'drop-shadow(0 0 3px var(--accent-cyan-glow))';
     }
   }
+}
+
+// Update RSSI 4-bar indicator
+function updateSignalBars(rssi) {
+  const bars = document.querySelectorAll('.signal-indicator .bar');
+  if (!bars.length) return;
+  
+  let activeCount = 4;
+  if (rssi < -82) activeCount = 1;
+  else if (rssi < -72) activeCount = 2;
+  else if (rssi < -62) activeCount = 3;
+
+  bars.forEach((bar, idx) => {
+    bar.classList.toggle('active', idx < activeCount);
+  });
 }
 
 // Render Complete State to DOM
@@ -81,59 +107,75 @@ function updateUI(state) {
 
   // Device Info
   if (state.deviceInfo) {
-    deviceNameEl.textContent = state.deviceInfo.name || 'realme Buds T310';
-    fwInfoEl.textContent = `FW: ${state.deviceInfo.firmwareVersion || '1.1.0.89'}`;
+    if (deviceNameEl) deviceNameEl.textContent = state.deviceInfo.name || 'realme Buds T310';
+    if (fwInfoEl) fwInfoEl.textContent = `FW ${state.deviceInfo.firmwareVersion || '1.1.0.89'}`;
   }
 
   // Connection Status
-  if (state.connected) {
-    statusDotEl.className = 'status-indicator';
-    statusTextEl.textContent = 'Connected';
-    btnToggleConnect.textContent = 'Simulate Disconnect';
-  } else {
-    statusDotEl.className = 'status-indicator disconnected';
-    statusTextEl.textContent = 'Disconnected';
-    btnToggleConnect.textContent = 'Reconnect';
+  if (state.connected !== undefined) {
+    if (statusDotEl) {
+      statusDotEl.className = state.connected ? 'status-indicator' : 'status-indicator disconnected';
+    }
+    if (statusTextEl) {
+      statusTextEl.textContent = state.connected ? 'Connected' : 'Disconnected';
+    }
   }
 
   // Battery
   if (state.battery) {
-    valLeftEl.textContent = `${state.battery.left}%`;
-    valRightEl.textContent = `${state.battery.right}%`;
-    valCaseEl.textContent = `${state.battery.case}%`;
+    if (valLeftEl) valLeftEl.textContent = `${state.battery.left}%`;
+    if (valRightEl) valRightEl.textContent = `${state.battery.right}%`;
+    if (valCaseEl) valCaseEl.textContent = `${state.battery.case}%`;
 
     setRingLevel(ringLeftEl, state.battery.left, false);
     setRingLevel(ringRightEl, state.battery.right, false);
     setRingLevel(ringCaseEl, state.battery.case, true);
 
-    chargeLeftEl.classList.toggle('hidden', !state.battery.chargingLeft);
-    chargeRightEl.classList.toggle('hidden', !state.battery.chargingRight);
-    chargeCaseEl.classList.toggle('hidden', !state.battery.chargingCase);
+    if (chargeLeftEl) chargeLeftEl.classList.toggle('hidden', !state.battery.chargingLeft);
+    if (chargeRightEl) chargeRightEl.classList.toggle('hidden', !state.battery.chargingRight);
+    if (chargeCaseEl) chargeCaseEl.classList.toggle('hidden', !state.battery.chargingCase);
   }
 
-  // ANC Slider & Buttons
-  const ancModes = ['cancellation', 'off', 'transparency'];
-  const activeIndex = ancModes.indexOf(state.ancMode);
-  if (activeIndex !== -1) {
-    ancSliderEl.style.transform = `translateX(${activeIndex * 100}%)`;
-    ancButtons.forEach((btn, idx) => {
-      btn.classList.toggle('active', idx === activeIndex);
+  // ANC Slider, Badges & Ambient Theme
+  if (state.ancMode) {
+    try { localStorage.setItem('budsbar_anc', state.ancMode); } catch (e) {}
+    const ancModes = ['cancellation', 'off', 'transparency'];
+    const activeIndex = ancModes.indexOf(state.ancMode);
+    
+    if (activeIndex !== -1 && ancSliderEl) {
+      ancSliderEl.style.transform = `translateX(${activeIndex * 100}%)`;
+    }
+
+    ancButtons.forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-mode') === state.ancMode);
     });
-    ancCaptionEl.textContent = ANC_CAPTIONS[state.ancMode] || '';
+
+    if (ancCaptionEl) ancCaptionEl.textContent = ANC_CAPTIONS[state.ancMode] || '';
+    if (ancDbBadge) ancDbBadge.textContent = ANC_DB_TEXT[state.ancMode] || '46 dB';
+
+    // Reactively update ambient backdrop lighting
+    if (appShell) {
+      appShell.setAttribute('data-anc', state.ancMode);
+    }
   }
 
   // Game Mode
-  chkGameMode.checked = Boolean(state.gameMode);
+  if (chkGameMode && state.gameMode !== undefined) {
+    chkGameMode.checked = Boolean(state.gameMode);
+  }
 
   // EQ Presets
-  eqPills.forEach(pill => {
-    const isCurrent = pill.getAttribute('data-eq') === state.eqPreset;
-    pill.classList.toggle('active', isCurrent);
-  });
+  if (state.eqPreset) {
+    eqPills.forEach(pill => {
+      const isCurrent = pill.getAttribute('data-eq') === state.eqPreset;
+      pill.classList.toggle('active', isCurrent);
+    });
+  }
 
-  // Signal
-  if (state.rssi) {
-    rssiInfoEl.textContent = `${state.rssi} dBm`;
+  // Signal Strength
+  if (state.rssi !== undefined) {
+    if (rssiInfoEl) rssiInfoEl.textContent = `${state.rssi} dBm`;
+    updateSignalBars(state.rssi);
   }
 }
 
@@ -159,22 +201,24 @@ ancButtons.forEach(btn => {
   });
 });
 
-chkGameMode.addEventListener('change', async (e) => {
-  const isEnabled = e.target.checked;
-  console.log('[BudsBar UI] Game Mode toggled:', isEnabled);
-  
-  // Optimistic UI update
-  updateUI({ gameMode: isEnabled });
+if (chkGameMode) {
+  chkGameMode.addEventListener('change', async (e) => {
+    const isEnabled = e.target.checked;
+    console.log('[BudsBar UI] Game Mode toggled:', isEnabled);
+    
+    // Optimistic UI update
+    updateUI({ gameMode: isEnabled });
 
-  if (window.budsAPI && typeof window.budsAPI.setGameMode === 'function') {
-    try {
-      const newState = await window.budsAPI.setGameMode(isEnabled);
-      updateUI(newState);
-    } catch (err) {
-      console.error('Failed to set Game Mode:', err);
+    if (window.budsAPI && typeof window.budsAPI.setGameMode === 'function') {
+      try {
+        const newState = await window.budsAPI.setGameMode(isEnabled);
+        updateUI(newState);
+      } catch (err) {
+        console.error('Failed to set Game Mode:', err);
+      }
     }
-  }
-});
+  });
+}
 
 eqPills.forEach(pill => {
   pill.addEventListener('click', async (e) => {
@@ -196,28 +240,32 @@ eqPills.forEach(pill => {
   });
 });
 
-btnRefresh.addEventListener('click', async () => {
-  btnRefresh.style.transform = 'rotate(360deg)';
-  
-  if (window.budsAPI && typeof window.budsAPI.getState === 'function') {
-    try {
-      const state = await window.budsAPI.getState();
-      updateUI(state);
-    } catch (err) {
-      console.error('Failed to refresh state:', err);
+if (btnRefresh) {
+  btnRefresh.addEventListener('click', async () => {
+    btnRefresh.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    btnRefresh.style.transform = 'rotate(360deg)';
+    
+    if (window.budsAPI && typeof window.budsAPI.getState === 'function') {
+      try {
+        const state = await window.budsAPI.getState();
+        updateUI(state);
+      } catch (err) {
+        console.error('Failed to refresh state:', err);
+      }
+    } else {
+      // Gentle offline simulation for preview
+      const l = Math.max(10, currentState.battery.left - Math.floor(Math.random() * 2));
+      updateUI({
+        battery: { ...currentState.battery, left: l }
+      });
     }
-  } else {
-    // Minor battery simulation for offline preview
-    const l = Math.max(10, currentState.battery.left - Math.floor(Math.random() * 2));
-    updateUI({
-      battery: { ...currentState.battery, left: l }
-    });
-  }
 
-  setTimeout(() => {
-    btnRefresh.style.transform = 'none';
-  }, 400);
-});
+    setTimeout(() => {
+      btnRefresh.style.transition = 'none';
+      btnRefresh.style.transform = 'none';
+    }, 550);
+  });
+}
 
 function handleQuit() {
   console.log('[BudsBar UI] Quitting app...');

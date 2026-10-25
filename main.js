@@ -65,7 +65,7 @@ function toggleWindow() {
 function createWindow() {
   window = new BrowserWindow({
     width: 384,
-    height: 555,
+    height: 505,
     show: false,
     frame: false,
     resizable: false,

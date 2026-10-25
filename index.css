@@ -288,39 +288,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 3px;
-  height: 14px;
+  padding: 0 4px;
+  height: 16px;
 }
 
-.tile-tag {
-  font-size: 10px;
+.tile-badge {
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
-.case-tag {
+.case-badge {
   font-size: 8.5px;
-  letter-spacing: 0.5px;
-}
-
-.tile-bud-icon {
-  width: 13px;
-  height: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  opacity: 0.7;
-}
-
-.tile-bud-icon.mirrored {
-  transform: scaleX(-1);
-}
-
-.tile-bud-icon svg {
-  width: 100%;
-  height: 100%;
+  letter-spacing: 0.6px;
 }
 
 .charging-spark {
@@ -489,30 +474,30 @@ body {
   color: var(--text-tertiary);
 }
 
-/* Noise Control Segmented Track */
+/* Noise Control Segmented Track - Stacked Vertical Layout (No Overlap) */
 .segmented-track {
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   background: var(--surface-track);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-pill);
-  padding: 3px;
-  height: 38px;
+  border-radius: var(--radius-card);
+  padding: 3.5px;
+  height: 54px;
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45);
 }
 
 .segmented-thumb {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc((100% - 6px) / 3);
+  top: 3.5px;
+  bottom: 3.5px;
+  left: 3.5px;
+  width: calc((100% - 7px) / 3);
   background: #252A3C;
-  border: 1px solid #363D56;
-  border-radius: calc(var(--radius-pill) - 2px);
+  border: 1px solid #383F56;
+  border-radius: calc(var(--radius-card) - 3px);
   box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.45),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: transform var(--anim-spring);
   pointer-events: none;
@@ -525,20 +510,22 @@ body {
   border: none;
   color: var(--text-secondary);
   font-family: var(--font-family);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 0 4px;
+  gap: 3px;
+  padding: 4px 2px;
+  text-align: center;
   transition: all var(--anim-instant);
 }
 
 .option-icon-wrap {
-  width: 14px;
-  height: 14px;
+  width: 17px;
+  height: 17px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -547,7 +534,8 @@ body {
 
 .option-label {
   white-space: nowrap;
-  letter-spacing: -0.15px;
+  letter-spacing: -0.2px;
+  font-size: 10px;
 }
 
 .segmented-option svg {
@@ -903,39 +891,14 @@ input:checked + .switch-track:before {
   border-radius: 3px;
 }
 
-.footer-ctrls {
+.footer-hint {
   display: flex;
-  gap: 8px;
-}
-
-.footer-btn.danger-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  border-radius: 5px;
-  padding: 3px 8px;
-  color: var(--text-secondary);
-  font-family: var(--font-family);
-  font-size: 10.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--anim-instant);
 }
 
-.footer-btn.danger-btn svg {
-  width: 11px;
-  height: 11px;
-}
-
-.footer-btn.danger-btn:hover {
-  background: rgba(248, 113, 113, 0.16);
-  border-color: rgba(248, 113, 113, 0.38);
-  color: var(--accent-red);
-  transform: translateY(-1px);
-}
-
-.footer-btn.danger-btn:active {
-  transform: scale(0.95);
+.hint-key {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
 }

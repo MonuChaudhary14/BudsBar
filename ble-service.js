@@ -37,14 +37,14 @@ function savePersistedState(data) {
 }
 
 function getCtlBinary() {
-  const local = path.join(__dirname, 'buds-ctl');
-  if (fs.existsSync(local)) return local;
-  const uncompressed = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'buds-ctl');
-  if (fs.existsSync(uncompressed)) return uncompressed;
   if (process.resourcesPath) {
     const res = path.join(process.resourcesPath, 'buds-ctl');
     if (fs.existsSync(res)) return res;
   }
+  const uncompressed = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'buds-ctl');
+  if (fs.existsSync(uncompressed)) return uncompressed;
+  const local = path.join(__dirname, 'buds-ctl');
+  if (fs.existsSync(local) && !local.includes('app.asar')) return local;
   return local;
 }
 
@@ -63,21 +63,21 @@ export class EarbudsService extends EventEmitter {
     // Load persisted hardware state
     const saved = loadPersistedState();
 
-    // Live State
+    // Live State (default to false until verified by hardware check)
     this.state = {
-      connected: true,
+      connected: false,
       ancMode: saved.anc || 'off', // 'cancellation' | 'off' | 'transparency'
       gameMode: saved.game !== undefined ? Boolean(saved.game) : false,
       eqPreset: saved.eq || 'bass_boost',  // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
       battery: {
-        left: 100,
-        right: 100,
-        case: 100,
+        left: 0,
+        right: 0,
+        case: 0,
         chargingLeft: false,
         chargingRight: false,
         chargingCase: false
       },
-      rssi: -52
+      rssi: null
     };
 
     this.pollInterval = null;
@@ -90,28 +90,51 @@ export class EarbudsService extends EventEmitter {
     this.startHeartbeat();
   }
 
-  syncRealDevice() {
+  syncRealDevice(callback) {
     execFile(ctlBinary, ['status'], (error, stdout) => {
-      if (error || !stdout) return;
+      let changed = false;
+      if (error || !stdout) {
+        if (this.state.connected !== false) {
+          this.state.connected = false;
+          this.state.rssi = null;
+          changed = true;
+        }
+        if (changed) {
+          this.emit('state-changed', this.getState());
+        }
+        if (typeof callback === 'function') callback(this.getState());
+        return;
+      }
+
       try {
         const info = JSON.parse(stdout.trim());
         if (info.name) this.deviceInfo.name = info.name;
         if (info.address) this.deviceInfo.mac = info.address;
         
         const isConnected = Boolean(info.connected);
-        const batteryVal = typeof info.battery === 'number' ? info.battery : 100;
 
-        let changed = false;
         if (this.state.connected !== isConnected) {
           this.state.connected = isConnected;
           changed = true;
         }
 
-        if (this.state.battery.left !== batteryVal) {
-          this.state.battery.left = batteryVal;
-          this.state.battery.right = batteryVal;
-          this.state.battery.case = batteryVal;
-          changed = true;
+        if (isConnected) {
+          const batteryVal = typeof info.battery === 'number' ? info.battery : 100;
+          if (this.state.battery.left !== batteryVal) {
+            this.state.battery.left = batteryVal;
+            this.state.battery.right = batteryVal;
+            this.state.battery.case = batteryVal;
+            changed = true;
+          }
+          if (this.state.rssi === null) {
+            this.state.rssi = -52;
+            changed = true;
+          }
+        } else {
+          if (this.state.rssi !== null) {
+            this.state.rssi = null;
+            changed = true;
+          }
         }
 
         // Restore identified hardware ANC mode
@@ -137,8 +160,14 @@ export class EarbudsService extends EventEmitter {
         if (changed) {
           this.emit('state-changed', this.getState());
         }
+        if (typeof callback === 'function') callback(this.getState());
       } catch (e) {
-        // Ignore parse error
+        if (this.state.connected !== false) {
+          this.state.connected = false;
+          this.state.rssi = null;
+          this.emit('state-changed', this.getState());
+        }
+        if (typeof callback === 'function') callback(this.getState());
       }
     });
   }

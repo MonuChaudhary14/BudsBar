@@ -50,7 +50,11 @@ function toggleWindow() {
     window.hide();
   } else {
     // Immediate state sync whenever opened
-    earbudsService.syncRealDevice();
+    earbudsService.syncRealDevice((freshState) => {
+      if (window && window.webContents) {
+        window.webContents.send('buds:state-update', freshState);
+      }
+    });
     const currentState = earbudsService.getState();
     if (window.webContents) {
       window.webContents.send('buds:state-update', currentState);
@@ -134,6 +138,10 @@ function setupIpc() {
   ipcMain.on('buds:quit', () => app.quit());
 
   earbudsService.on('state-changed', (state) => {
+    if (tray) {
+      const statusText = state.connected ? 'Connected' : 'Disconnected';
+      tray.setToolTip(`BudsBar - realme Buds T310 (${statusText})`);
+    }
     if (window && window.webContents) {
       window.webContents.send('buds:state-update', state);
     }

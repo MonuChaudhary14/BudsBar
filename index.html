@@ -29,10 +29,10 @@
             <span class="device-badge">12.4mm Dynamic</span>
           </div>
           <div class="device-telemetry">
-            <span class="status-indicator">
+            <span class="status-indicator disconnected" id="statusIndicator">
               <span class="status-pulse-ring"></span>
-              <span class="status-dot" id="statusDot"></span>
-              <span class="status-label" id="statusText">Connected</span>
+              <span class="status-dot disconnected" id="statusDot"></span>
+              <span class="status-label" id="statusText">Disconnected</span>
             </span>
             <span class="telemetry-separator">•</span>
             <span class="signal-gauge" id="signalGauge" title="Signal Strength (RSSI)">
@@ -42,7 +42,7 @@
               <span class="sig-bar bar-4"></span>
             </span>
             <span class="telemetry-separator">•</span>
-            <span class="codec-tag">AAC 48kHz</span>
+            <span class="codec-tag" id="codecTag">Disconnected</span>
           </div>
         </div>
       </div>

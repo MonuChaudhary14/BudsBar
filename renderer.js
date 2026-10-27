@@ -2,16 +2,16 @@
 // BudsBar - Renderer & State Synchronization
 // ==========================================================================
 
-// Initial State
+// Initial State (defaults to disconnected until hardware confirms)
 let currentState = {
-  connected: true,
+  connected: false,
   ancMode: 'off', // 'cancellation' | 'off' | 'transparency'
   gameMode: false,
   eqPreset: 'bass_boost', // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
   battery: {
-    left: 100,
-    right: 100,
-    case: 100,
+    left: 0,
+    right: 0,
+    case: 0,
     chargingLeft: false,
     chargingRight: false,
     chargingCase: false
@@ -21,13 +21,15 @@ let currentState = {
     model: 'RMA2302',
     firmwareVersion: '1.1.0.89'
   },
-  rssi: -52
+  rssi: null
 };
 
 // DOM References
 const deviceNameEl = document.getElementById('deviceName');
+const statusIndicatorEl = document.getElementById('statusIndicator');
 const statusDotEl = document.getElementById('statusDot');
 const statusTextEl = document.getElementById('statusText');
+const codecTagEl = document.getElementById('codecTag') || document.querySelector('.codec-tag');
 const btnRefresh = document.getElementById('btnRefresh');
 const ambientGlowEl = document.getElementById('ambientGlow');
 const ambientGlowSecEl = document.getElementById('ambientGlowSec');
@@ -107,27 +109,31 @@ function updateBatteryRing(ringEl, pct) {
   }
 }
 
-// Update Bluetooth RSSI Signal Bars & Link Health
+// Update Bluetooth RSSI Signal Bars
 function updateSignalBars(rssi) {
   if (!signalGaugeEl) return;
   const bars = signalGaugeEl.querySelectorAll('.sig-bar');
   if (!bars || bars.length < 4) return;
 
+  if (rssi === null || rssi === undefined) {
+    bars.forEach((bar) => {
+      bar.style.background = 'rgba(255, 255, 255, 0.16)';
+      bar.style.opacity = '0.3';
+    });
+    return;
+  }
+
   let activeCount = 4;
-  let healthText = 'Excellent';
   let healthColor = 'var(--color-teal)';
 
   if (rssi < -85) {
     activeCount = 1;
-    healthText = 'Weak';
     healthColor = 'var(--color-red)';
   } else if (rssi < -75) {
     activeCount = 2;
-    healthText = 'Fair';
     healthColor = 'var(--color-amber)';
   } else if (rssi < -65) {
     activeCount = 3;
-    healthText = 'Good';
     healthColor = 'var(--color-teal)';
   }
 
@@ -137,14 +143,9 @@ function updateSignalBars(rssi) {
       bar.style.opacity = '1';
     } else {
       bar.style.background = 'rgba(255, 255, 255, 0.16)';
-      bar.style.opacity = '0.5';
+      bar.style.opacity = '0.3';
     }
   });
-
-  if (linkHealthEl) {
-    linkHealthEl.textContent = healthText;
-    linkHealthEl.style.color = healthColor;
-  }
 }
 
 // Render Complete State to UI
@@ -152,25 +153,49 @@ function updateUI(state) {
   if (!state) return;
   currentState = { ...currentState, ...state };
 
-  // Device Info & Firmware
-  if (state.deviceInfo) {
-    if (deviceNameEl) deviceNameEl.textContent = state.deviceInfo.name || 'realme Buds T310';
-    if (fwInfoEl) fwInfoEl.textContent = `FW ${state.deviceInfo.firmwareVersion || '1.1.0.89'}`;
+  // Device Info
+  if (state.deviceInfo && deviceNameEl) {
+    deviceNameEl.textContent = state.deviceInfo.name || 'realme Buds T310';
   }
 
   // Connection Status
-  if (state.connected !== undefined) {
-    if (statusDotEl) {
-      statusDotEl.className = state.connected ? 'status-dot' : 'status-dot disconnected';
-    }
-    if (statusTextEl) {
-      statusTextEl.textContent = state.connected ? 'Connected' : 'Disconnected';
-      statusTextEl.style.color = state.connected ? 'var(--text-secondary)' : 'var(--color-red)';
-    }
+  const isConn = Boolean(currentState.connected);
+  if (statusIndicatorEl) {
+    statusIndicatorEl.classList.toggle('disconnected', !isConn);
+  }
+  if (statusDotEl) {
+    statusDotEl.className = isConn ? 'status-dot' : 'status-dot disconnected';
+  }
+  if (statusTextEl) {
+    statusTextEl.textContent = isConn ? 'Connected' : 'Disconnected';
+    statusTextEl.style.color = isConn ? 'var(--text-secondary)' : 'var(--color-red)';
+  }
+  if (codecTagEl) {
+    codecTagEl.textContent = isConn ? 'AAC 48kHz' : 'Disconnected';
+    codecTagEl.style.opacity = isConn ? '1' : '0.45';
   }
 
-  // Battery Levels & Gauges
-  if (state.battery) {
+  // Battery Pods & Gauges
+  const cardLeft = document.getElementById('cardLeft');
+  const cardRight = document.getElementById('cardRight');
+  const cardCase = document.getElementById('cardCase');
+
+  if (cardLeft) cardLeft.classList.toggle('disconnected', !isConn);
+  if (cardRight) cardRight.classList.toggle('disconnected', !isConn);
+  if (cardCase) cardCase.classList.toggle('disconnected', !isConn);
+
+  if (!isConn) {
+    if (valLeftEl) valLeftEl.textContent = '--';
+    if (valRightEl) valRightEl.textContent = '--';
+    if (valCaseEl) valCaseEl.textContent = '--';
+    if (ringLeftEl) ringLeftEl.setAttribute('stroke-dasharray', '0, 100');
+    if (ringRightEl) ringRightEl.setAttribute('stroke-dasharray', '0, 100');
+    if (ringCaseEl) ringCaseEl.setAttribute('stroke-dasharray', '0, 100');
+    if (chargeLeftEl) chargeLeftEl.classList.remove('active');
+    if (chargeRightEl) chargeRightEl.classList.remove('active');
+    if (chargeCaseEl) chargeCaseEl.classList.remove('active');
+    updateSignalBars(null);
+  } else if (state.battery) {
     if (valLeftEl) valLeftEl.textContent = `${state.battery.left}%`;
     if (valRightEl) valRightEl.textContent = `${state.battery.right}%`;
     if (valCaseEl) valCaseEl.textContent = `${state.battery.case}%`;
@@ -182,11 +207,11 @@ function updateUI(state) {
     if (chargeLeftEl) chargeLeftEl.classList.toggle('active', Boolean(state.battery.chargingLeft));
     if (chargeRightEl) chargeRightEl.classList.toggle('active', Boolean(state.battery.chargingRight));
     if (chargeCaseEl) chargeCaseEl.classList.toggle('active', Boolean(state.battery.chargingCase));
+    updateSignalBars(state.rssi !== undefined && state.rssi !== null ? state.rssi : -52);
   }
 
   // ANC Mode
   if (state.ancMode) {
-
     ancButtons.forEach((btn) => {
       const isSelected = btn.getAttribute('data-mode') === state.ancMode;
       btn.classList.toggle('active', isSelected);
@@ -233,7 +258,6 @@ function updateUI(state) {
 
   // EQ Preset
   if (state.eqPreset) {
-
     eqButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-eq') === state.eqPreset);
     });
@@ -241,12 +265,6 @@ function updateUI(state) {
     if (eqStatusBadgeEl) {
       eqStatusBadgeEl.textContent = EQ_LABELS[state.eqPreset] || state.eqPreset;
     }
-  }
-
-  // RSSI Signal Strength & Telemetry
-  if (state.rssi !== undefined) {
-    if (rssiInfoEl) rssiInfoEl.textContent = `${state.rssi} dBm`;
-    updateSignalBars(state.rssi);
   }
 }
 

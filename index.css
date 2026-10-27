@@ -263,13 +263,33 @@ header, section, footer {
   100% { transform: scale(2.2); opacity: 0; }
 }
 
+.status-indicator.disconnected .status-dot,
 .status-dot.disconnected {
   background: var(--color-red);
   box-shadow: 0 0 8px var(--color-red);
 }
-.status-dot.disconnected ~ .status-pulse-ring {
-  animation: none;
-  opacity: 0;
+
+.status-indicator.disconnected .status-pulse-ring {
+  animation: none !important;
+  display: none !important;
+  opacity: 0 !important;
+}
+
+.status-indicator.disconnected .status-label {
+  color: var(--color-red);
+}
+
+.battery-card.disconnected {
+  opacity: 0.65;
+}
+
+.battery-card.disconnected .ring-fill {
+  stroke: rgba(255, 255, 255, 0.12) !important;
+  filter: none !important;
+}
+
+.battery-card.disconnected .pod-pct {
+  color: var(--text-muted);
 }
 
 .status-label {

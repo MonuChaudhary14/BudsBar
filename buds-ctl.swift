@@ -39,6 +39,9 @@ class RfcommSender: NSObject, IOBluetoothRFCOMMChannelDelegate {
 
 func sendCommand(address: String, packet: [UInt8]) -> Bool {
     guard let device = IOBluetoothDevice(addressString: address) else { return false }
+    if !device.isConnected() {
+        return false
+    }
     
     // Try primary channel 1 (Realme/TL SPP), fallback to channel 6
     for chId: BluetoothRFCOMMChannelID in [1, 6] {
@@ -55,7 +58,42 @@ func sendCommand(address: String, packet: [UInt8]) -> Bool {
     return false
 }
 
-func getBluetoothInfo() -> [String: Any]? {
+func getBluetoothInfo() -> [String: Any] {
+    // 1. Direct native check via IOBluetooth (instantaneous and authoritative)
+    var targetDevice: IOBluetoothDevice? = nil
+    if let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] {
+        for dev in paired {
+            let name = dev.name ?? ""
+            let addr = dev.addressString?.replacingOccurrences(of: "-", with: ":").uppercased() ?? ""
+            if name.lowercased().contains("realme") || name.lowercased().contains("t310") || addr == "84:9D:4B:FA:59:55" {
+                targetDevice = dev
+                break
+            }
+        }
+    }
+    
+    if targetDevice == nil {
+        targetDevice = IOBluetoothDevice(addressString: "84:9D:4B:FA:59:55")
+    }
+    
+    guard let dev = targetDevice else {
+        return ["connected": false]
+    }
+    
+    let isConnected = dev.isConnected()
+    let devName = dev.name ?? "realme Buds T310"
+    let devAddr = dev.addressString?.replacingOccurrences(of: "-", with: ":").uppercased() ?? "84:9D:4B:FA:59:55"
+    
+    if !isConnected {
+        return [
+            "connected": false,
+            "name": devName,
+            "address": devAddr
+        ]
+    }
+    
+    // 2. Only if device is actually connected, query battery info
+    var batteryVal = 100
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
     process.arguments = ["SPBluetoothDataType", "-json"]
@@ -67,23 +105,16 @@ func getBluetoothInfo() -> [String: Any]? {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
            let btList = json["SPBluetoothDataType"] as? [[String: Any]],
-           let first = btList.first {
-            
-            // Check connected devices
-            if let connectedList = first["device_connected"] as? [[String: [String: Any]]] {
-                for item in connectedList {
-                    for (name, props) in item {
-                        if name.lowercased().contains("realme") || name.lowercased().contains("t310") {
-                            let addr = props["device_address"] as? String ?? "84:9D:4B:FA:59:55"
-                            let batStr = props["device_batteryLevelMain"] as? String ?? "100%"
+           let first = btList.first,
+           let connectedList = first["device_connected"] as? [[String: [String: Any]]] {
+            for item in connectedList {
+                for (name, props) in item {
+                    if name.lowercased().contains("realme") || name.lowercased().contains("t310") {
+                        if let batStr = props["device_batteryLevelMain"] as? String {
                             let digits = batStr.filter { "0123456789".contains($0) }
-                            let batVal = Int(digits) ?? 100
-                            return [
-                                "connected": true,
-                                "name": name,
-                                "address": addr,
-                                "battery": batVal
-                            ]
+                            if let b = Int(digits) {
+                                batteryVal = b
+                            }
                         }
                     }
                 }
@@ -92,7 +123,13 @@ func getBluetoothInfo() -> [String: Any]? {
     } catch {
         // Fallback
     }
-    return nil
+    
+    return [
+        "connected": true,
+        "name": devName,
+        "address": devAddr,
+        "battery": batteryVal
+    ]
 }
 
 let stateFilePath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".budsbar-state.json").path
@@ -126,10 +163,12 @@ if args.count > 1 {
     let cmd = args[1]
     
     if cmd == "status" {
-        var result = getBluetoothInfo() ?? ["connected": false]
+        var result = getBluetoothInfo()
         let persisted = loadPersistedState()
         for (k, v) in persisted {
-            result[k] = v
+            if k != "connected" && k != "name" && k != "address" && k != "battery" {
+                result[k] = v
+            }
         }
         if let data = try? JSONSerialization.data(withJSONObject: result),
            let str = String(data: data, encoding: .utf8) {
@@ -199,10 +238,12 @@ if args.count > 1 {
 }
 
 // Default
-var result = getBluetoothInfo() ?? ["connected": false]
+var result = getBluetoothInfo()
 let persisted = loadPersistedState()
 for (k, v) in persisted {
-    result[k] = v
+    if k != "connected" && k != "name" && k != "address" && k != "battery" {
+        result[k] = v
+    }
 }
 if let data = try? JSONSerialization.data(withJSONObject: result),
    let str = String(data: data, encoding: .utf8) {

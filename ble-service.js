@@ -72,10 +72,8 @@ export class EarbudsService extends EventEmitter {
       battery: {
         left: 0,
         right: 0,
-        case: 0,
         chargingLeft: false,
-        chargingRight: false,
-        chargingCase: false
+        chargingRight: false
       },
       rssi: null
     };
@@ -123,7 +121,6 @@ export class EarbudsService extends EventEmitter {
           if (this.state.battery.left !== batteryVal) {
             this.state.battery.left = batteryVal;
             this.state.battery.right = batteryVal;
-            this.state.battery.case = batteryVal;
             changed = true;
           }
           if (this.state.rssi === null) {

@@ -369,8 +369,8 @@ header, section, footer {
 
 .battery-section {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
   margin: 0;
 }
 
@@ -378,7 +378,7 @@ header, section, footer {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
-  padding: 10px 8px 9px;
+  padding: 12px 14px 11px;
   display: flex;
   flex-direction: column;
   align-items: center;

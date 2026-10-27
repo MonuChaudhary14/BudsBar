@@ -11,10 +11,8 @@ let currentState = {
   battery: {
     left: 0,
     right: 0,
-    case: 0,
     chargingLeft: false,
-    chargingRight: false,
-    chargingCase: false
+    chargingRight: false
   },
   deviceInfo: {
     name: 'realme Buds T310',
@@ -34,18 +32,15 @@ const btnRefresh = document.getElementById('btnRefresh');
 const ambientGlowEl = document.getElementById('ambientGlow');
 const ambientGlowSecEl = document.getElementById('ambientGlowSec');
 
-// Battery Elements
+// Battery Elements (Left & Right Earbuds)
 const valLeftEl = document.getElementById('valLeft');
 const valRightEl = document.getElementById('valRight');
-const valCaseEl = document.getElementById('valCase');
 
 const ringLeftEl = document.getElementById('ringLeft');
 const ringRightEl = document.getElementById('ringRight');
-const ringCaseEl = document.getElementById('ringCase');
 
 const chargeLeftEl = document.getElementById('chargeLeft');
 const chargeRightEl = document.getElementById('chargeRight');
-const chargeCaseEl = document.getElementById('chargeCase');
 
 // Control Groups
 const ancButtons = document.querySelectorAll('.anc-pill, .segment-btn, .segmented-option');
@@ -178,35 +173,27 @@ function updateUI(state) {
   // Battery Pods & Gauges
   const cardLeft = document.getElementById('cardLeft');
   const cardRight = document.getElementById('cardRight');
-  const cardCase = document.getElementById('cardCase');
 
   if (cardLeft) cardLeft.classList.toggle('disconnected', !isConn);
   if (cardRight) cardRight.classList.toggle('disconnected', !isConn);
-  if (cardCase) cardCase.classList.toggle('disconnected', !isConn);
 
   if (!isConn) {
     if (valLeftEl) valLeftEl.textContent = '--';
     if (valRightEl) valRightEl.textContent = '--';
-    if (valCaseEl) valCaseEl.textContent = '--';
     if (ringLeftEl) ringLeftEl.setAttribute('stroke-dasharray', '0, 100');
     if (ringRightEl) ringRightEl.setAttribute('stroke-dasharray', '0, 100');
-    if (ringCaseEl) ringCaseEl.setAttribute('stroke-dasharray', '0, 100');
     if (chargeLeftEl) chargeLeftEl.classList.remove('active');
     if (chargeRightEl) chargeRightEl.classList.remove('active');
-    if (chargeCaseEl) chargeCaseEl.classList.remove('active');
     updateSignalBars(null);
   } else if (state.battery) {
     if (valLeftEl) valLeftEl.textContent = `${state.battery.left}%`;
     if (valRightEl) valRightEl.textContent = `${state.battery.right}%`;
-    if (valCaseEl) valCaseEl.textContent = `${state.battery.case}%`;
 
     updateBatteryRing(ringLeftEl, state.battery.left);
     updateBatteryRing(ringRightEl, state.battery.right);
-    updateBatteryRing(ringCaseEl, state.battery.case);
 
     if (chargeLeftEl) chargeLeftEl.classList.toggle('active', Boolean(state.battery.chargingLeft));
     if (chargeRightEl) chargeRightEl.classList.toggle('active', Boolean(state.battery.chargingRight));
-    if (chargeCaseEl) chargeCaseEl.classList.toggle('active', Boolean(state.battery.chargingCase));
     updateSignalBars(state.rssi !== undefined && state.rssi !== null ? state.rssi : -52);
   }
 

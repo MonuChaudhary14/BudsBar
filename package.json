@@ -1,6 +1,6 @@
 {
   "name": "budsbar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cross-platform Desktop Menu-Bar & Tray Controller for realme Buds T310",
   "main": "main.js",
   "type": "module",

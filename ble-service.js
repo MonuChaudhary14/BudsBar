@@ -183,13 +183,22 @@ export class EarbudsService extends EventEmitter {
     };
   }
 
+  _getCliArgs(cmd, val) {
+    const args = [cmd];
+    if (val !== undefined) args.push(String(val));
+    if (this.deviceInfo && this.deviceInfo.mac) {
+      args.push('--address', this.deviceInfo.mac);
+    }
+    return args;
+  }
+
   setAncMode(mode) {
     if (!['cancellation', 'off', 'transparency'].includes(mode)) return;
     this.state.ancMode = mode;
     savePersistedState({ anc: mode });
     
     // Send to hardware via native RFCOMM channel
-    execFile(ctlBinary, ['anc', mode], (err, stdout) => {
+    execFile(ctlBinary, this._getCliArgs('anc', mode), (err, stdout) => {
       if (err) console.error('Error sending ANC to earbud:', err);
       else console.log('[BudsBar] Hardware ANC updated:', stdout.trim());
     });
@@ -212,7 +221,7 @@ export class EarbudsService extends EventEmitter {
     this.state.gameMode = Boolean(enabled);
     savePersistedState({ game: this.state.gameMode });
     
-    execFile(ctlBinary, ['game', this.state.gameMode ? 'on' : 'off'], (err, stdout) => {
+    execFile(ctlBinary, this._getCliArgs('game', this.state.gameMode ? 'on' : 'off'), (err, stdout) => {
       if (err) console.error('Error sending Game Mode to earbud:', err);
       else console.log('[BudsBar] Hardware Game Mode updated:', stdout.trim());
     });
@@ -229,7 +238,7 @@ export class EarbudsService extends EventEmitter {
     this.state.eqPreset = preset;
     savePersistedState({ eq: preset });
 
-    execFile(ctlBinary, ['eq', preset], (err, stdout) => {
+    execFile(ctlBinary, this._getCliArgs('eq', preset), (err, stdout) => {
       if (err) console.error('Error sending EQ to earbud:', err);
       else console.log('[BudsBar] Hardware EQ updated:', stdout.trim());
     });

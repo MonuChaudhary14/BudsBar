@@ -37,15 +37,21 @@ function savePersistedState(data) {
 }
 
 function getCtlBinary() {
-  if (process.resourcesPath) {
-    const res = path.join(process.resourcesPath, 'buds-ctl');
-    if (fs.existsSync(res)) return res;
+  const candidates = [
+    process.resourcesPath && path.join(process.resourcesPath, 'buds-ctl'),
+    path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'buds-ctl'),
+    path.join(__dirname, 'buds-ctl')
+  ].filter(Boolean);
+
+  for (const binPath of candidates) {
+    if (fs.existsSync(binPath)) {
+      try {
+        fs.chmodSync(binPath, 0o755);
+      } catch (_) {}
+      return binPath;
+    }
   }
-  const uncompressed = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'buds-ctl');
-  if (fs.existsSync(uncompressed)) return uncompressed;
-  const local = path.join(__dirname, 'buds-ctl');
-  if (fs.existsSync(local) && !local.includes('app.asar')) return local;
-  return local;
+  return path.join(__dirname, 'buds-ctl');
 }
 
 const ctlBinary = getCtlBinary();
@@ -57,7 +63,7 @@ export class EarbudsService extends EventEmitter {
       name: 'realme Buds T310',
       model: 'RMA2302',
       firmwareVersion: '1.1.0.89',
-      mac: '84:9D:4B:FA:59:55'
+      mac: ''
     };
     
     // Load persisted hardware state
@@ -79,6 +85,7 @@ export class EarbudsService extends EventEmitter {
     };
 
     this.pollInterval = null;
+    this._isSyncing = false;
     this.init();
   }
 
@@ -89,7 +96,14 @@ export class EarbudsService extends EventEmitter {
   }
 
   syncRealDevice(callback) {
-    execFile(ctlBinary, ['status'], (error, stdout) => {
+    if (this._isSyncing) {
+      if (typeof callback === 'function') callback(this.getState());
+      return;
+    }
+    this._isSyncing = true;
+
+    execFile(ctlBinary, ['status'], { timeout: 5000 }, (error, stdout) => {
+      this._isSyncing = false;
       let changed = false;
       if (error || !stdout) {
         if (this.state.connected !== false) {
@@ -198,7 +212,7 @@ export class EarbudsService extends EventEmitter {
     savePersistedState({ anc: mode });
     
     // Send to hardware via native RFCOMM channel
-    execFile(ctlBinary, this._getCliArgs('anc', mode), (err, stdout) => {
+    execFile(ctlBinary, this._getCliArgs('anc', mode), { timeout: 5000 }, (err, stdout) => {
       if (err) console.error('Error sending ANC to earbud:', err);
       else console.log('[BudsBar] Hardware ANC updated:', stdout.trim());
     });
@@ -221,7 +235,7 @@ export class EarbudsService extends EventEmitter {
     this.state.gameMode = Boolean(enabled);
     savePersistedState({ game: this.state.gameMode });
     
-    execFile(ctlBinary, this._getCliArgs('game', this.state.gameMode ? 'on' : 'off'), (err, stdout) => {
+    execFile(ctlBinary, this._getCliArgs('game', this.state.gameMode ? 'on' : 'off'), { timeout: 5000 }, (err, stdout) => {
       if (err) console.error('Error sending Game Mode to earbud:', err);
       else console.log('[BudsBar] Hardware Game Mode updated:', stdout.trim());
     });
@@ -238,7 +252,7 @@ export class EarbudsService extends EventEmitter {
     this.state.eqPreset = preset;
     savePersistedState({ eq: preset });
 
-    execFile(ctlBinary, this._getCliArgs('eq', preset), (err, stdout) => {
+    execFile(ctlBinary, this._getCliArgs('eq', preset), { timeout: 5000 }, (err, stdout) => {
       if (err) console.error('Error sending EQ to earbud:', err);
       else console.log('[BudsBar] Hardware EQ updated:', stdout.trim());
     });

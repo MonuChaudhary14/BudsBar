@@ -7,6 +7,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
+    "build:native": "swiftc -O -framework Foundation -framework IOBluetooth buds-ctl.swift -o buds-ctl",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
@@ -25,8 +26,8 @@
     },
     "files": [
       "**/*",
-      "!buds-ctl.swift",
-      "!generate_icon.swift",
+      "!*.swift",
+      "!scripts/**",
       "!assets/icon_1024.png"
     ],
     "extraResources": [
@@ -34,9 +35,6 @@
         "from": "buds-ctl",
         "to": "buds-ctl"
       }
-    ],
-    "asarUnpack": [
-      "buds-ctl"
     ]
   },
   "keywords": [

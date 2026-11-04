@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, nativeImage, screen } from 'electron';
+import { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, nativeImage, screen, shell } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { EarbudsService } from './ble-service.js';
@@ -45,13 +45,13 @@ function getWindowPosition() {
 }
 
 function toggleWindow() {
-  if (!window) return;
+  if (!window || window.isDestroyed()) return;
   if (window.isVisible()) {
     window.hide();
   } else {
     // Immediate state sync whenever opened
     earbudsService.syncRealDevice((freshState) => {
-      if (window && window.webContents) {
+      if (window && !window.isDestroyed() && window.webContents) {
         window.webContents.send('buds:state-update', freshState);
       }
     });
@@ -101,8 +101,8 @@ function createWindow() {
 function registerHotkeys() {
   // Hotkey to cycle ANC modes
   globalShortcut.register('CommandOrControl+Shift+N', () => {
-    const nextMode = earbudsService.cycleAncMode();
-    if (window && window.webContents) {
+    earbudsService.cycleAncMode();
+    if (window && !window.isDestroyed() && window.webContents) {
       window.webContents.send('buds:state-update', earbudsService.getState());
     }
   });
@@ -110,7 +110,7 @@ function registerHotkeys() {
   // Hotkey to toggle Game Mode
   globalShortcut.register('CommandOrControl+Shift+G', () => {
     earbudsService.toggleGameMode();
-    if (window && window.webContents) {
+    if (window && !window.isDestroyed() && window.webContents) {
       window.webContents.send('buds:state-update', earbudsService.getState());
     }
   });
@@ -135,6 +135,11 @@ function setupIpc() {
     earbudsService.setConnected(!earbudsService.state.connected);
     return earbudsService.getState();
   });
+  ipcMain.on('buds:open-external', (_e, url) => {
+    if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {
+      shell.openExternal(url);
+    }
+  });
   ipcMain.on('buds:quit', () => app.quit());
 
   earbudsService.on('state-changed', (state) => {
@@ -142,7 +147,7 @@ function setupIpc() {
       const statusText = state.connected ? 'Connected' : 'Disconnected';
       tray.setToolTip(`BudsBar - realme Buds T310 (${statusText})`);
     }
-    if (window && window.webContents) {
+    if (window && !window.isDestroyed() && window.webContents) {
       window.webContents.send('buds:state-update', state);
     }
   });

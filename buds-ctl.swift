@@ -13,7 +13,7 @@ class RfcommSender: NSObject, IOBluetoothRFCOMMChannelDelegate {
 
     func rfcommChannelOpenComplete(_ rfcommChannel: IOBluetoothRFCOMMChannel!, status error: IOReturn) {
         guard error == kIOReturnSuccess else {
-            CFRunLoopStop(CFRunLoopGetMain())
+            CFRunLoopStop(CFRunLoopGetCurrent())
             return
         }
         
@@ -31,7 +31,7 @@ class RfcommSender: NSObject, IOBluetoothRFCOMMChannelDelegate {
             if let ch = self?.channel, ch.isOpen() {
                 ch.close()
             }
-            CFRunLoopStop(CFRunLoopGetMain())
+            CFRunLoopStop(CFRunLoopGetCurrent())
         }
     }
 
@@ -39,11 +39,11 @@ class RfcommSender: NSObject, IOBluetoothRFCOMMChannelDelegate {
         // Earbud ACK received (e.g. AA 08 00 00 04 84 01 01 00 00)
         self.success = true
         rfcommChannel.close()
-        CFRunLoopStop(CFRunLoopGetMain())
+        CFRunLoopStop(CFRunLoopGetCurrent())
     }
 
     func rfcommChannelClosed(_ rfcommChannel: IOBluetoothRFCOMMChannel!) {
-        CFRunLoopStop(CFRunLoopGetMain())
+        CFRunLoopStop(CFRunLoopGetCurrent())
     }
 }
 

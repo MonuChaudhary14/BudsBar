@@ -28,17 +28,26 @@ function getWindowPosition() {
   let x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2));
   let y = Math.round(trayBounds.y + trayBounds.height + 4);
 
-  // If tray is at bottom (Windows taskbar)
-  if (trayBounds.y > display.bounds.height / 2) {
+  // If tray is at bottom (e.g. Windows taskbar or bottom panel)
+  const isTrayNearBottom = trayBounds.y > display.bounds.y + (display.bounds.height / 2);
+  if (isTrayNearBottom) {
     y = Math.round(trayBounds.y - windowBounds.height - 4);
   }
 
-  // Prevent window from clipping off-screen
+  // Prevent window from clipping horizontally
   if (x + windowBounds.width > display.bounds.x + display.bounds.width) {
     x = display.bounds.x + display.bounds.width - windowBounds.width - 10;
   }
   if (x < display.bounds.x) {
     x = display.bounds.x + 10;
+  }
+
+  // Prevent window from clipping vertically
+  if (y + windowBounds.height > display.bounds.y + display.bounds.height) {
+    y = display.bounds.y + display.bounds.height - windowBounds.height - 10;
+  }
+  if (y < display.bounds.y) {
+    y = display.bounds.y + 10;
   }
 
   return { x, y };

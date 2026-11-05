@@ -90,6 +90,14 @@ function createWindow() {
 
   window.loadFile(path.join(__dirname, 'index.html'));
 
+  // Dynamic polling rate: fast when UI is open, low-power idle when hidden
+  window.on('show', () => {
+    earbudsService.startHeartbeat(4000);
+  });
+  window.on('hide', () => {
+    earbudsService.startHeartbeat(30000);
+  });
+
   // Auto-hide when user clicks anywhere outside
   window.on('blur', () => {
     if (!window.webContents.isDevToolsOpened()) {

@@ -94,7 +94,7 @@ export class EarbudsService extends EventEmitter {
   init() {
     // Immediate initial sync from device / buds-ctl
     this.syncRealDevice();
-    this.startHeartbeat();
+    this.startHeartbeat(30000);
   }
 
   syncRealDevice(callback) {
@@ -219,11 +219,11 @@ export class EarbudsService extends EventEmitter {
     });
   }
 
-  startHeartbeat() {
+  startHeartbeat(intervalMs = 30000) {
     if (this.pollInterval) clearInterval(this.pollInterval);
     this.pollInterval = setInterval(() => {
       this.syncRealDevice();
-    }, 4000);
+    }, intervalMs);
   }
 
   getState() {

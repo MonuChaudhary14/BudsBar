@@ -421,8 +421,8 @@ case "eq":
     let preset = args[1].lowercased()
     var eqByte: UInt8 = 0x00
     if preset == "bass_boost" { eqByte = 0x01 }
-    else if preset == "clear_vocals" { eqByte = 0x00 }
-    else if preset == "bright" { eqByte = 0x02 }
+    else if preset == "clear_vocals" { eqByte = 0x02 }
+    else if preset == "bright" { eqByte = 0x03 }
     else if preset == "balanced" { eqByte = 0x00 }
     
     guard let device = findTargetDevice(explicitAddress: explicitAddress) else {

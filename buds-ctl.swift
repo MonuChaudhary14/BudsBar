@@ -203,8 +203,8 @@ func findTargetDevice(explicitAddress: String? = nil) -> IOBluetoothDevice? {
         }
     }
     
-    // 3. Fallback to default address if known
-    return IOBluetoothDevice(addressString: "84:9D:4B:FA:59:55")
+    // 3. No device found
+    return nil
 }
 
 func sendCommand(device: IOBluetoothDevice, packet: [UInt8]) -> Bool {

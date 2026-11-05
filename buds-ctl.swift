@@ -248,6 +248,13 @@ func getBluetoothInfo(explicitAddress: String? = nil) -> [String: Any] {
         "address": devAddr
     ]
     
+    let rawRssi = dev.rawRSSI()
+    if rawRssi != 0 {
+        result["rssi"] = rawRssi
+    } else {
+        result["rssi"] = NSNull()
+    }
+    
     // 1. Direct hardware telemetry via RFCOMM command 262
     if let telemetry = queryTelemetryFromDevice(device: dev) {
         result["battery"] = telemetry.overallBattery

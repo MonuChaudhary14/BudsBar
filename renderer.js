@@ -201,7 +201,7 @@ function updateUI(state) {
 
     if (chargeLeftEl) chargeLeftEl.classList.toggle('active', Boolean(state.battery.chargingLeft));
     if (chargeRightEl) chargeRightEl.classList.toggle('active', Boolean(state.battery.chargingRight));
-    updateSignalBars(state.rssi !== undefined && state.rssi !== null ? state.rssi : -52);
+    updateSignalBars(typeof state.rssi === 'number' ? state.rssi : null);
   }
 
   // ANC Mode

@@ -167,8 +167,9 @@ export class EarbudsService extends EventEmitter {
             }
           }
 
-          if (this.state.rssi === null) {
-            this.state.rssi = -52;
+          const newRssi = typeof info.rssi === 'number' ? info.rssi : null;
+          if (this.state.rssi !== newRssi) {
+            this.state.rssi = newRssi;
             changed = true;
           }
         } else {

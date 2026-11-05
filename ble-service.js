@@ -246,9 +246,8 @@ export class EarbudsService extends EventEmitter {
   setAncMode(mode) {
     if (!['cancellation', 'off', 'transparency'].includes(mode)) return;
     this.state.ancMode = mode;
-    savePersistedState({ anc: mode });
     
-    // Send to hardware via native RFCOMM channel
+    // Send to hardware via native RFCOMM channel (buds-ctl persists on verified ACK)
     execFile(ctlBinary, this._getCliArgs('anc', mode), { timeout: 5000 }, (err, stdout) => {
       if (err) console.error('Error sending ANC to earbud:', err);
       else console.log('[BudsBar] Hardware ANC updated:', stdout.trim());
@@ -270,7 +269,6 @@ export class EarbudsService extends EventEmitter {
 
   setGameMode(enabled) {
     this.state.gameMode = Boolean(enabled);
-    savePersistedState({ game: this.state.gameMode });
     
     execFile(ctlBinary, this._getCliArgs('game', this.state.gameMode ? 'on' : 'off'), { timeout: 5000 }, (err, stdout) => {
       if (err) console.error('Error sending Game Mode to earbud:', err);
@@ -287,7 +285,6 @@ export class EarbudsService extends EventEmitter {
 
   setEqPreset(preset) {
     this.state.eqPreset = preset;
-    savePersistedState({ eq: preset });
 
     execFile(ctlBinary, this._getCliArgs('eq', preset), { timeout: 5000 }, (err, stdout) => {
       if (err) console.error('Error sending EQ to earbud:', err);

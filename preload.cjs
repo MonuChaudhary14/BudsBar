@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('budsAPI', {
   getState: () => ipcRenderer.invoke('buds:get-state'),
+  refreshState: () => ipcRenderer.invoke('buds:refresh-state'),
   setAncMode: (mode) => ipcRenderer.invoke('buds:set-anc', mode),
   setGameMode: (enabled) => ipcRenderer.invoke('buds:set-game-mode', enabled),
   setEqPreset: (preset) => ipcRenderer.invoke('buds:set-eq', preset),

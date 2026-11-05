@@ -119,6 +119,13 @@ function registerHotkeys() {
 // IPC Handlers
 function setupIpc() {
   ipcMain.handle('buds:get-state', () => earbudsService.getState());
+  ipcMain.handle('buds:refresh-state', () => {
+    return new Promise((resolve) => {
+      earbudsService.syncRealDevice((freshState) => {
+        resolve(freshState);
+      });
+    });
+  });
   ipcMain.handle('buds:set-anc', (_e, mode) => {
     earbudsService.setAncMode(mode);
     return earbudsService.getState();

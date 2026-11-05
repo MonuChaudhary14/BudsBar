@@ -330,12 +330,19 @@ if (btnRefresh) {
     btnRefresh.style.transition = 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)';
     btnRefresh.style.transform = 'rotate(360deg)';
 
-    if (window.budsAPI && typeof window.budsAPI.getState === 'function') {
+    if (window.budsAPI && typeof window.budsAPI.refreshState === 'function') {
+      try {
+        const state = await window.budsAPI.refreshState();
+        updateUI(state);
+      } catch (err) {
+        console.error('Failed to refresh state:', err);
+      }
+    } else if (window.budsAPI && typeof window.budsAPI.getState === 'function') {
       try {
         const state = await window.budsAPI.getState();
         updateUI(state);
       } catch (err) {
-        console.error('Failed to refresh state:', err);
+        console.error('Failed to get state:', err);
       }
     }
 

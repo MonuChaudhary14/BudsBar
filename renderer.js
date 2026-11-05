@@ -377,11 +377,6 @@ window.addEventListener('keydown', (e) => {
 
 // Initialize State
 async function init() {
-  try {
-    localStorage.removeItem('budsbar_anc');
-    localStorage.removeItem('budsbar_eq');
-  } catch (e) {}
-
   // Apply default state immediately to keep slider aligned to Normal
   updateUI(currentState);
 

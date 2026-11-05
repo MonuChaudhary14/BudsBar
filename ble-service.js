@@ -76,10 +76,12 @@ export class EarbudsService extends EventEmitter {
       gameMode: saved.game !== undefined ? Boolean(saved.game) : false,
       eqPreset: saved.eq || 'bass_boost',  // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
       battery: {
-        left: 0,
-        right: 0,
+        left: null,
+        right: null,
+        case: null,
         chargingLeft: false,
-        chargingRight: false
+        chargingRight: false,
+        chargingCase: false
       },
       rssi: null
     };
@@ -131,12 +133,40 @@ export class EarbudsService extends EventEmitter {
         }
 
         if (isConnected) {
-          const batteryVal = typeof info.battery === 'number' ? info.battery : 100;
-          if (this.state.battery.left !== batteryVal) {
-            this.state.battery.left = batteryVal;
-            this.state.battery.right = batteryVal;
-            changed = true;
+          const hasLeft = info.batteryLeft !== undefined && info.batteryLeft !== null;
+          const hasRight = info.batteryRight !== undefined && info.batteryRight !== null;
+
+          if (hasLeft || hasRight) {
+            const leftVal = hasLeft ? Number(info.batteryLeft) : null;
+            const rightVal = hasRight ? Number(info.batteryRight) : null;
+            const caseVal = (info.batteryCase !== undefined && info.batteryCase !== null) ? Number(info.batteryCase) : null;
+            const chgL = Boolean(info.chargingLeft);
+            const chgR = Boolean(info.chargingRight);
+            const chgC = Boolean(info.chargingCase);
+
+            if (this.state.battery.left !== leftVal ||
+                this.state.battery.right !== rightVal ||
+                this.state.battery.case !== caseVal ||
+                this.state.battery.chargingLeft !== chgL ||
+                this.state.battery.chargingRight !== chgR ||
+                this.state.battery.chargingCase !== chgC) {
+              this.state.battery.left = leftVal;
+              this.state.battery.right = rightVal;
+              this.state.battery.case = caseVal;
+              this.state.battery.chargingLeft = chgL;
+              this.state.battery.chargingRight = chgR;
+              this.state.battery.chargingCase = chgC;
+              changed = true;
+            }
+          } else {
+            const batteryVal = typeof info.battery === 'number' ? info.battery : 100;
+            if (this.state.battery.left !== batteryVal || this.state.battery.right !== batteryVal) {
+              this.state.battery.left = batteryVal;
+              this.state.battery.right = batteryVal;
+              changed = true;
+            }
           }
+
           if (this.state.rssi === null) {
             this.state.rssi = -52;
             changed = true;
@@ -144,6 +174,12 @@ export class EarbudsService extends EventEmitter {
         } else {
           if (this.state.rssi !== null) {
             this.state.rssi = null;
+            changed = true;
+          }
+          if (this.state.battery.left !== null || this.state.battery.right !== null) {
+            this.state.battery.left = null;
+            this.state.battery.right = null;
+            this.state.battery.case = null;
             changed = true;
           }
         }

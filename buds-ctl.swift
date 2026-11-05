@@ -51,6 +51,131 @@ func normalizeAddress(_ addr: String) -> String {
     return addr.replacingOccurrences(of: "-", with: ":").uppercased()
 }
 
+struct EarbudsTelemetry {
+    var left: Int? = nil
+    var right: Int? = nil
+    var caseBattery: Int? = nil
+    var chargingLeft: Bool = false
+    var chargingRight: Bool = false
+    var chargingCase: Bool = false
+    
+    var overallBattery: Int {
+        if let r = right, let l = left {
+            return min(l, r)
+        }
+        return right ?? left ?? 100
+    }
+}
+
+class TelemetryReceiver: NSObject, IOBluetoothRFCOMMChannelDelegate {
+    let packet: [UInt8]
+    var telemetry = EarbudsTelemetry()
+    var receivedResponse = false
+    private weak var channel: IOBluetoothRFCOMMChannel?
+    
+    init(packet: [UInt8]) {
+        self.packet = packet
+        super.init()
+    }
+    
+    func rfcommChannelOpenComplete(_ rfcommChannel: IOBluetoothRFCOMMChannel!, status error: IOReturn) {
+        guard error == kIOReturnSuccess else {
+            CFRunLoopStop(CFRunLoopGetCurrent())
+            return
+        }
+        self.channel = rfcommChannel
+        var p = packet
+        let writeRes = p.withUnsafeMutableBytes { ptr in
+            rfcommChannel.writeSync(ptr.baseAddress, length: UInt16(ptr.count))
+        }
+        if writeRes != kIOReturnSuccess {
+            rfcommChannel.close()
+            CFRunLoopStop(CFRunLoopGetCurrent())
+            return
+        }
+        
+        // Safety timeout
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            if let ch = self?.channel, ch.isOpen() {
+                ch.close()
+            }
+            CFRunLoopStop(CFRunLoopGetCurrent())
+        }
+    }
+    
+    func rfcommChannelData(_ rfcommChannel: IOBluetoothRFCOMMChannel!, data dataPointer: UnsafeMutableRawPointer!, length dataLength: Int) {
+        let buffer = UnsafeBufferPointer(start: dataPointer.assumingMemoryBound(to: UInt8.self), count: dataLength)
+        let bytes = Array(buffer)
+        
+        // Check for AA ... 06 81 (Battery response opcode 0x8106 for command 262)
+        if bytes.count >= 9 && bytes[0] == 0xAA {
+            if bytes[4] == 0x06 && bytes[5] == 0x81 {
+                let payloadLen = Int(bytes[7]) | (Int(bytes[8]) << 8)
+                let payloadStart = 9
+                if bytes.count >= payloadStart + payloadLen && payloadLen >= 2 {
+                    let status = bytes[payloadStart]
+                    if status == 0 {
+                        let count = Int(bytes[payloadStart + 1])
+                        var offset = payloadStart + 2
+                        for _ in 0..<count {
+                            if offset + 1 < bytes.count {
+                                let role = bytes[offset]
+                                let val = bytes[offset + 1]
+                                let level = Int(val & 0x7F)
+                                let charging = (val & 0x80) != 0
+                                
+                                switch role {
+                                case 1:
+                                    telemetry.left = level
+                                    telemetry.chargingLeft = charging
+                                case 2:
+                                    telemetry.right = level
+                                    telemetry.chargingRight = charging
+                                case 3:
+                                    if level > 0 {
+                                        telemetry.caseBattery = level
+                                    }
+                                    telemetry.chargingCase = charging
+                                default:
+                                    break
+                                }
+                                offset += 2
+                            }
+                        }
+                        receivedResponse = true
+                    }
+                }
+            }
+        }
+        rfcommChannel.close()
+        CFRunLoopStop(CFRunLoopGetCurrent())
+    }
+    
+    func rfcommChannelClosed(_ rfcommChannel: IOBluetoothRFCOMMChannel!) {
+        CFRunLoopStop(CFRunLoopGetCurrent())
+    }
+}
+
+func queryTelemetryFromDevice(device: IOBluetoothDevice) -> EarbudsTelemetry? {
+    guard device.isConnected() else { return nil }
+    
+    // Command 262 (0x0106) query battery packet: [0xAA, 0x07, 0x00, 0x00, 0x06, 0x01, 0x01, 0x00, 0x00]
+    let packet: [UInt8] = [0xAA, 0x07, 0x00, 0x00, 0x06, 0x01, 0x01, 0x00, 0x00]
+    
+    for chId: BluetoothRFCOMMChannelID in [1, 6, 5] {
+        let receiver = TelemetryReceiver(packet: packet)
+        var channel: IOBluetoothRFCOMMChannel? = nil
+        let res = device.openRFCOMMChannelSync(&channel, withChannelID: chId, delegate: receiver)
+        if res == kIOReturnSuccess {
+            CFRunLoopRunInMode(CFRunLoopMode.defaultMode, 0.7, false)
+            if receiver.receivedResponse {
+                return receiver.telemetry
+            }
+        }
+    }
+    return nil
+}
+
 func findTargetDevice(explicitAddress: String? = nil) -> IOBluetoothDevice? {
     if let explicit = explicitAddress, !explicit.isEmpty {
         let norm = normalizeAddress(explicit)
@@ -117,7 +242,25 @@ func getBluetoothInfo(explicitAddress: String? = nil) -> [String: Any] {
         ]
     }
     
-    // Query system_profiler for battery information
+    var result: [String: Any] = [
+        "connected": true,
+        "name": devName,
+        "address": devAddr
+    ]
+    
+    // 1. Direct hardware telemetry via RFCOMM command 262
+    if let telemetry = queryTelemetryFromDevice(device: dev) {
+        result["battery"] = telemetry.overallBattery
+        result["batteryLeft"] = telemetry.left ?? NSNull()
+        result["batteryRight"] = telemetry.right ?? NSNull()
+        result["batteryCase"] = telemetry.caseBattery ?? NSNull()
+        result["chargingLeft"] = telemetry.chargingLeft
+        result["chargingRight"] = telemetry.chargingRight
+        result["chargingCase"] = telemetry.chargingCase
+        return result
+    }
+    
+    // 2. Secondary fallback: system_profiler
     var batteryVal = 100
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
@@ -155,12 +298,8 @@ func getBluetoothInfo(explicitAddress: String? = nil) -> [String: Any] {
         // Fallback to default
     }
     
-    return [
-        "connected": true,
-        "name": devName,
-        "address": devAddr,
-        "battery": batteryVal
-    ]
+    result["battery"] = batteryVal
+    return result
 }
 
 let stateFilePath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".budsbar-state.json").path
@@ -191,7 +330,7 @@ func outputStatusAndExit(explicitAddress: String? = nil) -> Never {
     var result = getBluetoothInfo(explicitAddress: explicitAddress)
     let persisted = loadPersistedState()
     for (k, v) in persisted {
-        if k != "connected" && k != "name" && k != "address" && k != "battery" {
+        if result[k] == nil {
             result[k] = v
         }
     }

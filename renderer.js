@@ -9,10 +9,12 @@ let currentState = {
   gameMode: false,
   eqPreset: 'bass_boost', // 'balanced' | 'bass_boost' | 'clear_vocals' | 'bright'
   battery: {
-    left: 0,
-    right: 0,
+    left: null,
+    right: null,
+    case: null,
     chargingLeft: false,
-    chargingRight: false
+    chargingRight: false,
+    chargingCase: false
   },
   deviceInfo: {
     name: 'realme Buds T310',
@@ -174,10 +176,9 @@ function updateUI(state) {
   const cardLeft = document.getElementById('cardLeft');
   const cardRight = document.getElementById('cardRight');
 
-  if (cardLeft) cardLeft.classList.toggle('disconnected', !isConn);
-  if (cardRight) cardRight.classList.toggle('disconnected', !isConn);
-
   if (!isConn) {
+    if (cardLeft) cardLeft.classList.add('disconnected');
+    if (cardRight) cardRight.classList.add('disconnected');
     if (valLeftEl) valLeftEl.textContent = '--';
     if (valRightEl) valRightEl.textContent = '--';
     if (ringLeftEl) ringLeftEl.setAttribute('stroke-dasharray', '0, 100');
@@ -186,11 +187,17 @@ function updateUI(state) {
     if (chargeRightEl) chargeRightEl.classList.remove('active');
     updateSignalBars(null);
   } else if (state.battery) {
-    if (valLeftEl) valLeftEl.textContent = `${state.battery.left}%`;
-    if (valRightEl) valRightEl.textContent = `${state.battery.right}%`;
+    const hasLeft = typeof state.battery.left === 'number' && state.battery.left >= 0;
+    const hasRight = typeof state.battery.right === 'number' && state.battery.right >= 0;
 
-    updateBatteryRing(ringLeftEl, state.battery.left);
-    updateBatteryRing(ringRightEl, state.battery.right);
+    if (cardLeft) cardLeft.classList.toggle('disconnected', !hasLeft);
+    if (cardRight) cardRight.classList.toggle('disconnected', !hasRight);
+
+    if (valLeftEl) valLeftEl.textContent = hasLeft ? `${state.battery.left}%` : '--';
+    if (valRightEl) valRightEl.textContent = hasRight ? `${state.battery.right}%` : '--';
+
+    updateBatteryRing(ringLeftEl, hasLeft ? state.battery.left : 0);
+    updateBatteryRing(ringRightEl, hasRight ? state.battery.right : 0);
 
     if (chargeLeftEl) chargeLeftEl.classList.toggle('active', Boolean(state.battery.chargingLeft));
     if (chargeRightEl) chargeRightEl.classList.toggle('active', Boolean(state.battery.chargingRight));

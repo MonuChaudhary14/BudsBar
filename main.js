@@ -144,7 +144,13 @@ function setupIpc() {
 
   earbudsService.on('state-changed', (state) => {
     if (tray) {
-      const statusText = state.connected ? 'Connected' : 'Disconnected';
+      let statusText = 'Disconnected';
+      if (state.connected) {
+        const parts = [];
+        if (typeof state.battery?.left === 'number') parts.push(`L: ${state.battery.left}%`);
+        if (typeof state.battery?.right === 'number') parts.push(`R: ${state.battery.right}%`);
+        statusText = parts.length > 0 ? `Connected (${parts.join(', ')})` : 'Connected';
+      }
       tray.setToolTip(`BudsBar - realme Buds T310 (${statusText})`);
     }
     if (window && !window.isDestroyed() && window.webContents) {

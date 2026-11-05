@@ -42,9 +42,9 @@
   --radius-pill: 10px;
   --radius-full: 9999px;
 
-  /* Fonts */
-  --font-main: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Monaco, monospace;
+  /* Fonts (Local native system stack for 0ms latency & offline support) */
+  --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, monospace;
 
   /* Physics & Transitions */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
